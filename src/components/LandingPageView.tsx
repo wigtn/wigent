@@ -6,6 +6,7 @@ interface LandingPageViewProps {
   html: string;
   title?: string;
   onNewDebate: () => void;
+  onReject?: () => void;
   onViewChat?: () => void;
   onBack?: () => void;
 }
@@ -14,6 +15,7 @@ export function LandingPageView({
   html,
   title = "Landing Page",
   onNewDebate,
+  onReject,
   onViewChat,
   onBack,
 }: LandingPageViewProps) {
@@ -74,27 +76,15 @@ export function LandingPageView({
         style={{ height: "100vh" }}
       />
 
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2.5">
         {onBack && (
           <button
             onClick={onBack}
             className="flex items-center gap-2 rounded-full bg-[#1a1d21] border border-[#383a3e] px-5 py-3 text-sm font-medium text-[#d1d2d3] shadow-lg transition-all hover:bg-[#222529] hover:scale-105"
             aria-label="돌아가기"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              className="shrink-0"
-            >
-              <path
-                d="M10 12L6 8l4-4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+              <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             돌아가기
           </button>
@@ -105,22 +95,22 @@ export function LandingPageView({
             className="flex items-center gap-2 rounded-full bg-[#2c2d30] border border-[#383a3e] px-5 py-3 text-sm font-medium text-[#d1d2d3] shadow-lg transition-all hover:bg-[#35373b] hover:scale-105"
             aria-label="토론 다시보기"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              className="shrink-0"
-            >
-              <path
-                d="M2 3h12v8H4l-2 2V3z"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+              <path d="M2 3h12v8H4l-2 2V3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             토론 다시보기
+          </button>
+        )}
+        {onReject && (
+          <button
+            onClick={onReject}
+            className="flex items-center gap-2 rounded-full bg-[#dc2626] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-[#ef4444] hover:scale-105"
+            aria-label="결과 반려"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            결과 반려
           </button>
         )}
         <button
@@ -148,24 +138,13 @@ export function LandingPageView({
         </button>
         <button
           onClick={onNewDebate}
-          className="flex items-center gap-2 rounded-full bg-[#1264a3] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-[#1574b8] hover:scale-105"
-          aria-label="새 토론 시작"
+          className="flex items-center gap-2 rounded-full bg-[#16a34a] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-[#22c55e] hover:scale-105"
+          aria-label="결과 만족"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            className="shrink-0"
-          >
-            <path
-              d="M8 1v14M1 8h14"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+            <path d="M3 8.5l3.5 3.5L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          새 토론 시작
+          결과 만족
         </button>
       </div>
     </div>

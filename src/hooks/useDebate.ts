@@ -278,6 +278,7 @@ function parseSSELines(raw: string): { event: string; data: string }[] {
 export interface UseDebateReturn {
   state: DebateState;
   startDebate: (topic: string) => void;
+  reject: () => void;
   reset: () => void;
 }
 
@@ -360,13 +361,23 @@ export function useDebate(): UseDebateReturn {
     }
   }, []);
 
+  const reject = useCallback(() => {
+    const topic = state.topic;
+    if (!topic) return;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    dispatch({ type: "RESET" });
+    // 같은 주제로 바로 재토론
+    setTimeout(() => startDebate(topic), 100);
+  }, [state.topic, startDebate]);
+
   const reset = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
     dispatch({ type: "RESET" });
   }, []);
 
-  return { state, startDebate, reset };
+  return { state, startDebate, reject, reset };
 }
 
 // ── Event Dispatcher ──

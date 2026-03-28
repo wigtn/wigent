@@ -12,7 +12,7 @@ import { HistoryList } from "@/components/HistoryList";
 import type { DebateState, HistoryEntry } from "@/lib/types";
 
 export default function Home() {
-  const { state, startDebate, reset } = useDebate();
+  const { state, startDebate, reject, reset } = useDebate();
   const { entries, save, remove } = useHistory();
   const [showChat, setShowChat] = useState(false);
   const [historyItem, setHistoryItem] = useState<HistoryEntry | null>(null);
@@ -177,6 +177,7 @@ export default function Home() {
               html={landingHtml}
               title={historyItem?.result?.idea?.title ?? state.result?.idea?.title}
               onNewDebate={handleNewDebate}
+              onReject={historyItem ? undefined : reject}
               onViewChat={handleViewChat}
               onBack={historyItem ? handleHistoryBack : undefined}
             />
