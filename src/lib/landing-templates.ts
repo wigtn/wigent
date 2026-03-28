@@ -27,7 +27,7 @@ function stepsHtml(
 }
 
 const FOOTER_TEXT =
-  "Agent Arena에서 AI 에이전트들의 토론으로 탄생한 아이디어";
+  "Wegent에서 AI 에이전트들의 토론으로 탄생한 아이디어";
 
 // ── 1. Glassmorphism ──
 

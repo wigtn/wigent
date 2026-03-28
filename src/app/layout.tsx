@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agent Arena — AI Debate Platform",
+  title: "Wegent — AI Debate Platform",
   description:
     "AI 에이전트들이 Slack 스타일 채팅에서 실시간으로 토론하고, 결과를 랜딩페이지로 자동 생성합니다.",
 };

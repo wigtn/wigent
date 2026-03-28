@@ -267,7 +267,7 @@ export function landingPagePrompt(
   },
   debateSummary: string,
 ): string {
-  return `Generate a high-quality dark-theme landing page HTML for a startup product. This is a design prototype with placeholder demo data.
+  return `Generate a production-quality dark-theme landing page HTML for a startup product. This is a design prototype with placeholder demo data.
 
 Product info:
 - Name: ${idea.title}
@@ -278,28 +278,31 @@ Product info:
 - Market: ${idea.marketSize}
 - Context from team discussion: ${debateSummary.slice(0, 800)}
 
-Requirements:
+Design rules:
 - Single complete HTML file with inline CSS and minimal JS
 - Dark theme: bg #0a0a0a, text #fafafa, accent color matching the product
 - Modern design: glassmorphism cards, gradient hero text, smooth animations
 - Font: system font stack, hero 56px+ bold, body 18px line-height 1.8
 - Cards: rgba(255,255,255,0.03) bg, subtle border, blur backdrop, hover lift
 - CTA buttons: accent bg, glow on hover, border-radius 12px
+- NEVER use emoji characters anywhere in the page. Use SVG icons or CSS shapes instead.
+- Each section must have substantial content: at least 3-4 sentences of description, not just one-liner bullet points.
 
-Sections (all in Korean):
-1. Sticky nav (logo + links + CTA button)
-2. Hero (badge pill + gradient title + subtitle + 2 CTA buttons + trust indicators)
-3. Problem (3 cards with emoji icons showing pain points)
-4. Solution (3-4 feature cards with emoji + title + description)
-5. How it works (3 numbered steps)
-6. Metrics (3-4 big numbers with accent color)
-7. Pricing (3 tier cards: Free/Pro/Enterprise with feature lists)
-8. Testimonials (2-3 demo quote cards with names - placeholder data)
-9. Final CTA (gradient bg + email input + button)
-10. Footer (4-column links + copyright)
+Sections (all text in Korean, rich content in each):
+1. Sticky nav (text logo + 4 nav links + CTA button, backdrop blur on scroll)
+2. Hero (small badge pill text + large gradient title 2-3 lines + 2 paragraph subtitle explaining the product in detail + 2 CTA buttons + 3 trust indicators as text)
+3. Problem section (section title + intro paragraph explaining the problem space + 3 problem cards, each with: CSS icon/shape, bold title, 3-4 sentence description with specific statistics)
+4. Solution section (section title + intro paragraph + 3-4 feature cards, each with: CSS icon, feature name, detailed 3-4 sentence description explaining how it works)
+5. How it works (3 numbered steps with connecting lines in CSS, each step has title + 2-3 sentence description)
+6. Metrics (4 big numbers with labels, use accent color gradient on numbers)
+7. Pricing (3 tier cards with plan name, price, feature checklist of 5+ items each, recommended plan highlighted)
+8. Testimonials (3 quote cards with name + title + company + 2-3 sentence quote - all placeholder demo data)
+9. Final CTA (full-width gradient background + compelling headline + subtitle + email input + button + small disclaimer text)
+10. Footer (4-column layout: Product, Resources, Company, Legal with 4+ links each + bottom copyright)
 
-Animations via Intersection Observer: fade-in-up on scroll, staggered cards, number count-up.
+Animations: Intersection Observer fade-in-up on scroll, staggered card reveals, number count-up animation for metrics.
 Responsive at 768px and 480px breakpoints.
 Use CSS custom properties for colors.
+Minimum 10,000 characters of HTML code. Each section must be thorough and detailed.
 Output ONLY the HTML starting with <!DOCTYPE html>. No markdown fences.`;
 }

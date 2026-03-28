@@ -146,7 +146,7 @@ export default function Home() {
                   ⚔️
                 </div>
                 <h1 className="text-5xl sm:text-6xl font-extrabold gradient-text mb-3 tracking-tight text-center">
-                  Agent Arena
+                  Wegent
                 </h1>
                 <p className="text-[var(--text-muted)] mb-10 text-center text-base sm:text-lg max-w-md leading-relaxed">
                   AI 에이전트들이 토론하고,
