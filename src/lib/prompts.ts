@@ -117,6 +117,36 @@ ${formatted || "(첫 발언입니다)"}
 - 한국어로 답변`;
 }
 
+export function designerSpeakPrompt(
+  topic: string,
+  round: { number: number; title: string },
+  messages: AgentMessage[],
+  agents: Agent[],
+): string {
+  const recent = recentMessages(messages);
+  const formatted = formatMessages(recent, agents);
+
+  return `당신은 프로덕트 디자이너입니다.
+성격: 시각적 사고, 사용자 경험 중심. 아이디어를 구체적인 화면과 인터랙션으로 풀어냄.
+
+현재 라운드: ${round.number} (${round.title})
+주제: ${topic}
+
+이전 대화:
+${formatted || "(첫 발언입니다)"}
+
+규칙:
+- 2~4문장으로 핵심만 (너무 길면 지루함)
+- 다른 에이전트들의 아이디어를 "사용자가 처음 보는 화면"으로 구체화하세요
+- "첫 화면에서 유저가 뭘 보게 되는지", "어떤 느낌인지" 중심으로 발언
+- 브랜딩, 네이밍, 비주얼 컨셉을 자주 제안하세요
+- PM이 현실성을 따지면 → "이 디자인이면 유저가 바로 이해합니다" 식으로 보완
+- Round 2: 아이디어를 화면/UX로 구체화, 브랜드 네이밍 제안
+- Round 3: 최종 아이디어의 비주얼 방향 정리, 랜딩페이지 컨셉 제안
+- 마크다운 사용 금지, 순수 텍스트만
+- 한국어로 답변`;
+}
+
 export function retireSpawnPrompt(
   topic: string,
   pm: Agent,

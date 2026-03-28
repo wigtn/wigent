@@ -253,3 +253,14 @@ export const PM_AGENT: Omit<Agent, "id"> = {
   isFixed: true,
   status: "online",
 };
+
+export const DESIGNER_AGENT: Omit<Agent, "id"> = {
+  name: "디자이너 에이전트",
+  role: "프로덕트 디자이너",
+  personality:
+    "시각적 사고, 사용자 경험 중심. 아이디어를 구체적인 화면과 인터랙션으로 풀어냄. 브랜딩과 첫인상에 집착.",
+  color: "#EC4899",
+  emoji: "🎨",
+  isFixed: true,
+  status: "online",
+};

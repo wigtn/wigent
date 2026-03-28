@@ -1,10 +1,11 @@
 import OpenAI from "openai";
 import type { Agent, AgentMessage, FinalIdea, SSEEvent } from "./types";
-import { PM_AGENT } from "./types";
+import { PM_AGENT, DESIGNER_AGENT } from "./types";
 import {
   createAgentPrompt,
   pmSpeakPrompt,
   agentSpeakPrompt,
+  designerSpeakPrompt,
   retireSpawnPrompt,
   finalResultPrompt,
   landingPagePrompt,
@@ -216,7 +217,12 @@ export async function* runDebate(
     }
   }
 
-  // ── Step 3: Round 2 ──
+  // ── Step 3: Designer joins after brainstorming ──
+  const designerAgent: Agent = { id: genId(), ...DESIGNER_AGENT };
+  allAgents.push(designerAgent);
+  yield { type: "agent_spawned", data: { agent: designerAgent } };
+
+  // ── Step 4: Round 2 ──
   yield { type: "round_start", data: { round: 2, title: rounds[1].title } };
 
   for await (const ev of streamSpeak(
@@ -257,7 +263,27 @@ export async function* runDebate(
     }
   }
 
-  // ── Step 4: Retire + Spawn ──
+  // Designer speaks in Round 2
+  for await (const ev of streamSpeak(
+    openai,
+    designerSpeakPrompt(topic, rounds[1], allMessages, allAgents),
+    designerAgent.id,
+    2,
+    signal,
+  )) {
+    yield ev;
+    if (ev.type === "agent_speak_done") {
+      allMessages.push({
+        id: genId(),
+        agentId: designerAgent.id,
+        content: ev.data.fullMessage,
+        round: 2,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  // ── Step 5: Retire + Spawn ──
   const retireSpawn = await callJSON<{
     retire: { agentId: string; exitMessage: string };
     spawn: {
@@ -299,7 +325,7 @@ export async function* runDebate(
   allAgents.push(agent3);
   yield { type: "agent_spawned", data: { agent: agent3 } };
 
-  // ── Step 5: Round 3 ──
+  // ── Step 6: Round 3 ──
   yield { type: "round_start", data: { round: 3, title: rounds[2].title } };
 
   for await (const ev of streamSpeak(
@@ -340,14 +366,34 @@ export async function* runDebate(
     }
   }
 
-  // ── Step 6: Final Result ──
+  // Designer speaks in Round 3 (final visual direction)
+  for await (const ev of streamSpeak(
+    openai,
+    designerSpeakPrompt(topic, rounds[2], allMessages, allAgents),
+    designerAgent.id,
+    3,
+    signal,
+  )) {
+    yield ev;
+    if (ev.type === "agent_speak_done") {
+      allMessages.push({
+        id: genId(),
+        agentId: designerAgent.id,
+        content: ev.data.fullMessage,
+        round: 3,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  // ── Step 7: Final Result ──
   const finalResult = await callJSON<{
     idea: FinalIdea;
   }>(openai, finalResultPrompt(topic, allAgents, allMessages), signal);
 
   yield { type: "final_result", data: { result: { idea: finalResult.idea } } };
 
-  // ── Step 7: Landing Page ──
+  // ── Step 8: Landing Page ──
   let landingHtml = "";
   try {
     const controller = new AbortController();
@@ -389,7 +435,7 @@ export async function* runDebate(
 
   yield { type: "landing_page_ready", data: { html: landingHtml } };
 
-  // ── Step 8: Done ──
+  // ── Step 9: Done ──
   yield {
     type: "debate_end",
     data: {
