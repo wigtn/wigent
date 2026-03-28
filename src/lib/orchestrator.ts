@@ -16,6 +16,15 @@ const LANDING_TIMEOUT = 180_000;
 const MAX_RETRIES = 1;
 const MAX_TURNS = 30;
 
+// 에이전트 간 랜덤 딜레이 (ms)
+const MIN_DELAY = 800;
+const MAX_DELAY = 2500;
+
+function randomDelay(): Promise<void> {
+  const ms = Math.floor(Math.random() * (MAX_DELAY - MIN_DELAY + 1)) + MIN_DELAY;
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // 에이전트 교체 발생 턴 (확정적)
 const RETIRE_AT_TURN = 12;
 const RETIRE_AGAIN_AT_TURN = 22;
@@ -329,6 +338,12 @@ export async function* runDebate(
       }
     }
 
+    // ── 에이전트 간 랜덤 딜레이 (현실감) ──
+    if (turnCount > 0) {
+      await randomDelay();
+      if (signal?.aborted) break;
+    }
+
     // ── 다음 발언자 선택 ──
     const speakerId = pickNextSpeaker(allAgents, allMessages, turnCount);
     const speaker = allAgents.find((a) => a.id === speakerId);
@@ -496,6 +511,10 @@ export async function* continueDebate(
 
   // 추가 자유 토론
   for (let i = 1; i < CONTINUE_TURNS; i++) {
+    // 에이전트 간 랜덤 딜레이 (현실감)
+    await randomDelay();
+    if (signal?.aborted) break;
+
     const speakerId = pickNextSpeaker(allAgents, allMessages, allMessages.length + i);
     const speaker = allAgents.find((a) => a.id === speakerId);
     if (!speaker || speaker.status !== "online") continue;

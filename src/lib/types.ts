@@ -258,7 +258,7 @@ export interface DebateRequest {
 // ── PM Agent (고정) ──
 
 export const PM_AGENT: Omit<Agent, "id"> = {
-  name: "PM 에이전트",
+  name: "PM 김현우",
   role: "프로덕트 매니저",
   personality:
     "냉정한 현실주의자. '그래서 누가 돈 내고 쓰는데?'가 입버릇. 실패 3번 겪은 10년차. 될 놈만 키운다.",
@@ -269,7 +269,7 @@ export const PM_AGENT: Omit<Agent, "id"> = {
 };
 
 export const DESIGNER_AGENT: Omit<Agent, "id"> = {
-  name: "디자이너 에이전트",
+  name: "디자이너 박지윤",
   role: "프로덕트 디자이너",
   personality:
     "실리콘밸리 출신. '유저가 3초 안에 이해 못 하면 실패'가 철학. 추상적 아이디어를 구체적 화면으로 바꾸고, 브랜드 네이밍에 집착한다.",

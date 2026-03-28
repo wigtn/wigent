@@ -88,9 +88,26 @@ export default function ChatArea({
           return null;
         })}
 
-        {/* Typing indicator */}
+        {/* Streaming message (실시간 텍스트 표시) */}
+        {activeAgent && streamingText.length > 0 && (
+          <ChatMessage
+            key={`streaming-${activeAgentId}`}
+            message={{
+              id: "streaming",
+              agentId: activeAgentId!,
+              content: "",
+              round: currentRound,
+              timestamp: Date.now(),
+            }}
+            agent={activeAgent}
+            isStreaming
+            streamingText={streamingText}
+          />
+        )}
+
+        {/* Typing indicator (텍스트 도착 전 표시) */}
         <AnimatePresence>
-          {activeAgent && streamingText.length > 0 && (
+          {activeAgent && streamingText.length === 0 && (
             <TypingIndicator agent={activeAgent} />
           )}
         </AnimatePresence>
