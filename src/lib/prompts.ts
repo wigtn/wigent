@@ -111,6 +111,33 @@ ${formatted || "(첫 발언 — 강력한 오프닝을 해라)"}
 - 한국어. 실제 회의에서 말하듯이.`;
 }
 
+// ── 반려 후 재토론 오프닝 ──
+
+export function rejectDebatePrompt(
+  pm: Agent,
+  topic: string,
+  messages: AgentMessage[],
+  agents: Agent[],
+): string {
+  const recent = recentMessages(messages, 6);
+  const formatted = formatMessages(recent, agents);
+
+  return `당신은 PM 에이전트. 방금 우리 팀이 만든 결과물이 반려당했다.
+사용자가 결과가 마음에 안 든다고 했다. 지금부터 추가 토론을 시작한다.
+
+주제: ${topic}
+
+이전 토론 마지막 부분:
+${formatted}
+
+당신의 역할:
+- 반려 사실을 팀에 알리면서 토론을 재개해라
+- "결과가 반려됐다. 뭐가 부족했는지 다시 생각해보자." 식으로 시작
+- 이전 토론에서 부족했던 점이나 더 파고들 부분을 짚어라
+- 새로운 방향이나 개선점을 제시하면서 토론을 이끌어라
+- 3~5문장. 마크다운 금지. 한국어.`;
+}
+
 export function retireSpawnPrompt(
   topic: string,
   pm: Agent,

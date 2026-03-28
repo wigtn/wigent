@@ -53,6 +53,7 @@ type Action =
   | { type: "LANDING_PAGE_READY"; html: string }
   | { type: "DEBATE_END" }
   | { type: "ERROR"; message: string }
+  | { type: "REJECT" }
   | { type: "RESET" };
 
 // ── Helpers ──
@@ -244,6 +245,20 @@ function reducer(state: DebateState, action: Action): DebateState {
     case "ERROR":
       return { ...state, status: "error", error: action.message };
 
+    case "REJECT": {
+      const rejectMsg = systemMsg("round_divider", "결과 반려 — 추가 토론 시작");
+      return {
+        ...state,
+        status: "debating",
+        result: null,
+        landingPageHtml: null,
+        activeAgentId: null,
+        streamingText: "",
+        error: null,
+        chatItems: [...state.chatItems, rejectMsg],
+      };
+    }
+
     case "RESET":
       msgCounter = 0;
       return initialState;
@@ -369,15 +384,76 @@ export function useDebate(): UseDebateReturn {
     }
   }, []);
 
-  const reject = useCallback(() => {
-    const topic = state.topic;
+  const reject = useCallback(async () => {
+    const { topic, agents, retiredAgents, chatItems } = state;
     if (!topic) return;
+
     abortRef.current?.abort();
-    abortRef.current = null;
-    dispatch({ type: "RESET" });
-    // 같은 주제로 바로 재토론
-    setTimeout(() => startDebate(topic), 100);
-  }, [state.topic, startDebate]);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    // 기존 대화 상태에서 메시지만 추출
+    const existingMessages = chatItems
+      .filter((item): item is { kind: "message"; data: AgentMessage } => item.kind === "message")
+      .map((item) => item.data);
+
+    const allAgents = [...agents, ...retiredAgents];
+
+    // 상태를 debating으로 전환 (랜딩페이지/결과 제거)
+    dispatch({ type: "REJECT" });
+
+    try {
+      const response = await fetch("/api/debate/continue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, agents: allAgents, messages: existingMessages }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        dispatch({ type: "ERROR", message: `서버 오류 (${response.status})` });
+        return;
+      }
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lastDoubleNewline = buffer.lastIndexOf("\n\n");
+        if (lastDoubleNewline === -1) continue;
+
+        const complete = buffer.slice(0, lastDoubleNewline + 2);
+        buffer = buffer.slice(lastDoubleNewline + 2);
+
+        const events = parseSSELines(complete);
+        for (const { event, data } of events) {
+          try {
+            handleSSEEvent(event as SSEEventType, JSON.parse(data), dispatch);
+          } catch { /* skip */ }
+        }
+      }
+
+      if (buffer.trim()) {
+        const events = parseSSELines(buffer);
+        for (const { event, data } of events) {
+          try {
+            handleSSEEvent(event as SSEEventType, JSON.parse(data), dispatch);
+          } catch { /* skip */ }
+        }
+      }
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      dispatch({
+        type: "ERROR",
+        message: err instanceof Error ? err.message : "연결이 끊어졌습니다.",
+      });
+    }
+  }, [state]);
 
   const reset = useCallback(() => {
     abortRef.current?.abort();

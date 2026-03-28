@@ -4,6 +4,7 @@ import { PM_AGENT, DESIGNER_AGENT } from "./types";
 import {
   createAgentPrompt,
   freeDebatePrompt,
+  rejectDebatePrompt,
   retireSpawnPrompt,
   summarizeDebatePrompt,
   finalResultPrompt,
@@ -449,6 +450,141 @@ export async function* runDebate(
     type: "debate_end",
     data: {
       totalRounds: turnCount,
+      totalAgents: allAgents.length,
+      totalMessages: allMessages.length,
+    },
+  };
+}
+
+// ── Continue Debate (반려 후 이어서 토론) ──
+
+const CONTINUE_TURNS = 8;
+
+export async function* continueDebate(
+  topic: string,
+  existingAgents: Agent[],
+  existingMessages: AgentMessage[],
+  signal?: AbortSignal,
+): AsyncGenerator<SSEEvent> {
+  const openai = createOpenAI();
+  const allAgents = existingAgents.map((a) => ({ ...a }));
+  const allMessages = [...existingMessages];
+
+  log("🔁 반려 — 추가 토론 시작", {
+    topic,
+    agents: allAgents.filter((a) => a.status === "online").map((a) => a.name),
+    existingMessages: allMessages.length,
+  });
+
+  // PM 에이전트가 반려 사실을 언급하며 토론 재개
+  const pmAgent = allAgents.find((a) => a.isFixed && a.role === "프로덕트 매니저");
+  if (pmAgent) {
+    const rejectPrompt = rejectDebatePrompt(pmAgent, topic, allMessages, allAgents);
+    for await (const ev of streamSpeak(openai, rejectPrompt, pmAgent.id, signal)) {
+      yield ev;
+      if (ev.type === "agent_speak_done") {
+        allMessages.push({
+          id: genId(),
+          agentId: pmAgent.id,
+          content: ev.data.fullMessage,
+          round: 0,
+          timestamp: Date.now(),
+        });
+      }
+    }
+  }
+
+  // 추가 자유 토론
+  for (let i = 1; i < CONTINUE_TURNS; i++) {
+    const speakerId = pickNextSpeaker(allAgents, allMessages, allMessages.length + i);
+    const speaker = allAgents.find((a) => a.id === speakerId);
+    if (!speaker || speaker.status !== "online") continue;
+
+    log(`🎤 추가 턴 ${i + 1}/${CONTINUE_TURNS}: ${speaker.name} 발언`);
+
+    // 후반 토론 (수렴 단계)
+    const prompt = freeDebatePrompt(speaker, topic, allMessages, allAgents, 25 + i);
+
+    for await (const ev of streamSpeak(openai, prompt, speaker.id, signal)) {
+      yield ev;
+      if (ev.type === "agent_speak_done") {
+        allMessages.push({
+          id: genId(),
+          agentId: speaker.id,
+          content: ev.data.fullMessage,
+          round: 0,
+          timestamp: Date.now(),
+        });
+      }
+    }
+  }
+
+  // 요약 → 결과 → 랜딩페이지 (기존과 동일)
+  log("📝 토론 요약 중...");
+  const summary = await callJSON<{ summary: string }>(
+    openai,
+    summarizeDebatePrompt(topic, allAgents, allMessages),
+    signal,
+  );
+  log("📝 토론 요약 완료", summary.summary);
+
+  log("📊 최종 결과 생성 중...");
+  const finalResult = await callJSON<{ idea: FinalIdea }>(
+    openai,
+    finalResultPrompt(topic, allAgents, allMessages, summary.summary),
+    signal,
+  );
+  log("📊 최종 아이디어", finalResult.idea);
+  yield { type: "final_result", data: { result: { idea: finalResult.idea } } };
+
+  log("🌐 랜딩페이지 생성 중...");
+  let landingHtml = "";
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), LANDING_TIMEOUT);
+    const merged = signal
+      ? AbortSignal.any([signal, controller.signal])
+      : controller.signal;
+
+    const stream = await openai.chat.completions.create(
+      {
+        model: "gpt-4o",
+        messages: [
+          { role: "user", content: landingPagePrompt(finalResult.idea, summary.summary) },
+        ],
+        stream: true,
+        temperature: 0.7,
+        max_tokens: 16000,
+      },
+      { signal: merged },
+    );
+    clearTimeout(timeout);
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content;
+      if (delta) {
+        landingHtml += delta;
+        yield { type: "landing_page_chunk", data: { chunk: delta } };
+      }
+    }
+  } catch {
+    landingHtml = FALLBACK_HTML(finalResult.idea);
+  }
+
+  landingHtml = landingHtml.replace(/^```html\s*/i, "").replace(/```\s*$/, "").trim();
+  if (!landingHtml.includes("<!DOCTYPE") && !landingHtml.includes("<html")) {
+    log("⚠️ 랜딩페이지 생성 거부됨, fallback 사용");
+    landingHtml = FALLBACK_HTML(finalResult.idea);
+  }
+
+  log("🌐 랜딩페이지 HTML 완성", `${landingHtml.length}자`);
+  yield { type: "landing_page_ready", data: { html: landingHtml } };
+
+  log("✅ 추가 토론 완료");
+  yield {
+    type: "debate_end",
+    data: {
+      totalRounds: CONTINUE_TURNS,
       totalAgents: allAgents.length,
       totalMessages: allMessages.length,
     },
