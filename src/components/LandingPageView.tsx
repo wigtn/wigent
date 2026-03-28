@@ -5,13 +5,19 @@ import { useRef, useEffect } from "react";
 interface LandingPageViewProps {
   html: string;
   onNewDebate: () => void;
+  onViewChat?: () => void;
+  onBack?: () => void;
 }
 
-export function LandingPageView({ html, onNewDebate }: LandingPageViewProps) {
+export function LandingPageView({
+  html,
+  onNewDebate,
+  onViewChat,
+  onBack,
+}: LandingPageViewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    // Auto-resize iframe to match content height
     const iframe = iframeRef.current;
     if (!iframe) return;
 
@@ -23,7 +29,6 @@ export function LandingPageView({ html, onNewDebate }: LandingPageViewProps) {
           iframe.style.height = `${Math.max(height, 600)}px`;
         }
       } catch {
-        // sandbox blocks access — fallback to fixed height
         iframe.style.height = "100vh";
       }
     };
@@ -43,28 +48,77 @@ export function LandingPageView({ html, onNewDebate }: LandingPageViewProps) {
         style={{ height: "100vh" }}
       />
 
-      <button
-        onClick={onNewDebate}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-[#1264a3] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-[#1574b8] hover:scale-105"
-        aria-label="새 토론 시작"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="shrink-0"
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 rounded-full bg-[#1a1d21] border border-[#383a3e] px-5 py-3 text-sm font-medium text-[#d1d2d3] shadow-lg transition-all hover:bg-[#222529] hover:scale-105"
+            aria-label="돌아가기"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="shrink-0"
+            >
+              <path
+                d="M10 12L6 8l4-4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            돌아가기
+          </button>
+        )}
+        {onViewChat && (
+          <button
+            onClick={onViewChat}
+            className="flex items-center gap-2 rounded-full bg-[#2c2d30] border border-[#383a3e] px-5 py-3 text-sm font-medium text-[#d1d2d3] shadow-lg transition-all hover:bg-[#35373b] hover:scale-105"
+            aria-label="토론 다시보기"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="shrink-0"
+            >
+              <path
+                d="M2 3h12v8H4l-2 2V3z"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            토론 다시보기
+          </button>
+        )}
+        <button
+          onClick={onNewDebate}
+          className="flex items-center gap-2 rounded-full bg-[#1264a3] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-[#1574b8] hover:scale-105"
+          aria-label="새 토론 시작"
         >
-          <path
-            d="M8 1v14M1 8h14"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-        새 토론 시작
-      </button>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="shrink-0"
+          >
+            <path
+              d="M8 1v14M1 8h14"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+          새 토론 시작
+        </button>
+      </div>
     </div>
   );
 }

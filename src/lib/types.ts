@@ -235,6 +235,20 @@ export const PRESETS: Preset[] = [
   },
 ];
 
+// ── History Entry (localStorage) ──
+
+export interface HistoryEntry {
+  id: string;
+  topic: string;
+  result: DebateResult | null;
+  landingPageHtml: string;
+  chatItems: ChatItem[];
+  agents: Agent[];
+  retiredAgents: Agent[];
+  channelName: string;
+  timestamp: number;
+}
+
 // ── API Request ──
 
 export interface DebateRequest {
