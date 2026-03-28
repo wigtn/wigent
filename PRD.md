@@ -1,12 +1,13 @@
 # Agent Arena PRD
 
-> **Version**: 1.2
+> **Version**: 2.0
 > **Created**: 2026-03-27
 > **Updated**: 2026-03-28
 > **Status**: Draft
 > **Hackathon**: Build with TRAE @Seoul (2026-03-28)
 > **Coding Time**: 3.5 hours (12:30~16:00)
 > **Team**: 3 members (각자 Claude Code로 병렬 개발 → merge)
+> **Scale Grade**: Hobby
 
 ---
 
@@ -18,12 +19,13 @@
 
 ### 1.2 Solution
 
-사용자가 주제를 던지면, **PM 에이전트(고정)**와 **주제별 전문가 에이전트(자동 생성)**가 실시간으로 토론·반박하고, 토론 중 기존 에이전트가 **퇴장**하며 새 **전문가 에이전트가 자동 탄생**하여 합류하는 멀티에이전트 토론 플랫폼.
+사용자가 주제를 던지면, **PM 에이전트(고정)**와 **주제별 전문가 에이전트(자동 생성)**가 **Slack 스타일 채팅 UI**에서 실시간으로 토론·반박하고, 토론 중 기존 에이전트가 **퇴장**하며 새 **전문가 에이전트가 자동 탄생**하여 합류한다. 토론이 끝나면 **아이디어 기반의 랜딩페이지가 자동 생성**되어 채팅 화면 자체를 대체한다.
 
 ### 1.3 Goals
 
-- 주제 입력 → 에이전트 자동 생성 → 실시간 토론 → 에이전트 퇴장/스포닝 → 아이디어 수렴
-- 토론 과정이 시각적으로 재밌고 인터랙티브하게 보이는 것
+- 주제 입력 → 에이전트 자동 생성 → Slack 스타일 실시간 토론 → 에이전트 퇴장/스포닝 → 랜딩페이지로 전환
+- 토론 과정이 Slack처럼 친숙하고 몰입감 있는 것
+- 토론 종료 → 웹페이지 갈아끼기(Full Page Swap)의 임팩트
 - 에이전트 디자인 패턴 7개 이상 활용
 
 ### 1.4 Non-Goals (Out of Scope)
@@ -31,14 +33,25 @@
 - 사용자가 토론에 직접 참여하는 기능 (v2)
 - 에이전트 커스터마이징 (v2)
 - 로그인/저장 기능
+- 랜딩페이지 편집 기능
 
-### 1.5 Key Differentiators
+### 1.5 Scope
+
+| 포함 | 제외 |
+|------|------|
+| 주제 입력 및 프리셋 | 사용자 채팅 참여 |
+| Slack 스타일 채팅 토론 | 멀티 채널/워크스페이스 |
+| 에이전트 자동 생성/퇴장/스포닝 | 에이전트 커스터마이징 |
+| 토론 완료 후 랜딩페이지 자동 생성 & 페이지 전환 | 랜딩페이지 코드 다운로드 |
+| 새 토론 시작 | 이전 토론 히스토리 |
+
+### 1.6 Key Differentiators
 
 | vs | 차별점 |
 |----|--------|
-| ChatGPT | 단일 응답 vs **다관점 토론 시각화** |
-| 기존 브레인스토밍 도구 | 수동 vs **AI 자율 토론 + 에이전트 자동 생성/퇴장** |
-| Multi-agent 데모 | 터미널 텍스트 vs **실시간 비주얼 토론 UI** |
+| ChatGPT | 단일 응답 vs **Slack 채팅에서 다관점 토론 시각화** |
+| 기존 브레인스토밍 도구 | 수동 vs **AI 자율 토론 → 결과물이 실제 웹페이지** |
+| Multi-agent 데모 | 터미널 텍스트 vs **Slack UI 토론 → 랜딩페이지 자동 생성** |
 
 ---
 
@@ -64,10 +77,12 @@
 ### 2.3 프론트엔드 AI 심사 대응
 
 - 모던 디자인 시스템 (Tailwind v4 + 커스텀 디자인 토큰)
+- Slack 스타일 채팅 UI (친숙하면서 세련된 UX)
 - 컴포넌트 분리 철저 (파일당 단일 책임)
 - 접근성 (aria-label, semantic HTML)
 - 반응형 (모바일~데스크탑)
 - 로딩 상태, 트랜지션, 마이크로 애니메이션
+- 페이지 전환 애니메이션 (채팅 → 랜딩페이지)
 - TypeScript strict 타입
 
 ---
@@ -124,12 +139,12 @@ Round 2 끝:
                      → 마케팅 일반론은 더 이상 필요 없음
                      → 팬덤 전문가 필요"
 
-💬 마케팅 전략가: "팬덤 비즈니스는 제 전문이 아닙니다.
+마케팅 전략가: "팬덤 비즈니스는 제 전문이 아닙니다.
                   전문가에게 맡기겠습니다. 행운을 빕니다!"
-→ 퇴장 애니메이션 (fadeOut + 카드 축소)
+→ Slack 스타일 퇴장 메시지 ("마케팅 전략가 박서연님이 채널을 나갔습니다")
 
-⚡ 팬덤 이코노미 전문가 등장!
-→ 등장 애니메이션 (scale up + glow)
+팬덤 이코노미 전문가 등장!
+→ Slack 스타일 합류 메시지 ("팬덤 이코노미 전문가 이도현님이 채널에 참여했습니다")
 
 Round 3: PM + 팬덤 전문가 (2명으로 수렴)
 ```
@@ -143,27 +158,34 @@ Round 3: PM + 팬덤 전문가 (2명으로 수렴)
 │                                                  │
 │  사용자가 주제 입력 또는 프리셋 선택             │
 │  "외국인 타겟 한국문화 아이템 아이디어"          │
+│  (Slack 워크스페이스 랜딩 느낌)                  │
 │                                                  │
 └──────────────────┬───────────────────────────────┘
                    ▼
-┌─ STEP 2: 에이전트 생성 ────────────────────────┐
+┌─ STEP 2: Slack 채팅 진입 ─────────────────────┐
 │                                                  │
+│  주제가 채널명이 됨: #한국문화-아이템-토론       │
+│  좌측 사이드바에 채널 표시                       │
 │  오케스트레이터가 주제 분석                      │
 │  → PM 에이전트 (고정) + Agent 2 자동 생성       │
-│  → 화면에 에이전트 카드 등장 애니메이션          │
+│  → "PM 에이전트님이 채널에 참여했습니다"         │
+│  → "마케팅 전략가 박서연님이 채널에 참여했습니다"│
 │                                                  │
 └──────────────────┬───────────────────────────────┘
                    ▼
 ┌─ STEP 3: Round 1 - 브레인스토밍 ───────────────┐
 │                                                  │
-│  PM 발언 (실시간 스트리밍)                       │
+│  채팅 메시지로 PM 발언 (실시간 스트리밍)         │
+│  → 아바타 + 이름 + 타임스탬프 + 메시지           │
 │  Agent 2 발언 (PM의 발언 참조, 대립)             │
+│  라운드 구분선: "── Round 1: 브레인스토밍 ──"    │
 │                                                  │
 └──────────────────┬───────────────────────────────┘
                    ▼
 ┌─ STEP 4: Round 2 - 토론/반박 ──────────────────┐
 │                                                  │
-│  PM 반박                                         │
+│  라운드 구분선 표시                              │
+│  PM 반박 (Slack 메시지 형태)                     │
 │  Agent 2 반박                                    │
 │  → 아이디어가 좁혀지기 시작                      │
 │                                                  │
@@ -172,9 +194,9 @@ Round 3: PM + 팬덤 전문가 (2명으로 수렴)
 ┌─ STEP 5: 에이전트 퇴장 + 스포닝 ───────────────┐
 │                                                  │
 │  오케스트레이터: 토론 분석                       │
-│  → Agent 2 퇴장 메시지 + 퇴장 애니메이션         │
-│  → 새 전문가 에이전트 자동 생성 + 합류           │
-│  → 스포닝 애니메이션                             │
+│  → "마케팅 전략가 박서연님이 채널을 나갔습니다"  │
+│  → "팬덤 전문가 이도현님이 채널에 참여했습니다"  │
+│  (Slack의 시스템 메시지 스타일)                  │
 │                                                  │
 └──────────────────┬───────────────────────────────┘
                    ▼
@@ -182,47 +204,181 @@ Round 3: PM + 팬덤 전문가 (2명으로 수렴)
 │                                                  │
 │  PM + 새 전문가 에이전트가 최종 의견             │
 │  → 합의점 도출                                   │
+│  → 마지막 메시지 후 잠시 pause                   │
 │                                                  │
 └──────────────────┬───────────────────────────────┘
                    ▼
-┌─ STEP 7: 결과 ─────────────────────────────────┐
+┌─ STEP 7: 랜딩페이지 전환 (Full Page Swap) ─────┐
 │                                                  │
-│  최종 아이디어 카드 표시                         │
-│  - 아이디어명, 타겟, 수익모델, 차별점            │
-│  - 시장 규모, 다음 단계                          │
-│  - 토론 하이라이트 타임라인                      │
-│                                                  │
-└──────────────────┬───────────────────────────────┘
-                   ▼
-┌─ STEP 8: 랜딩페이지 자동 생성 ────────────────┐
-│                                                  │
-│  "이 아이디어의 랜딩페이지를 생성중..." 표시     │
+│  채팅 화면에 시스템 메시지:                      │
+│  "토론이 완료되었습니다. 랜딩페이지를 생성 중..."│
+│  → 로딩 애니메이션 (프로그레스 바 또는 스피너)   │
 │  → GPT-4o가 FinalIdea 기반으로 HTML 생성         │
-│  → 완성된 랜딩페이지를 iframe으로 미리보기       │
-│  → [새 토론 시작] 버튼                           │
+│  → 전체 페이지가 fade-out → 랜딩페이지 fade-in   │
+│  → 채팅 UI 완전히 사라지고 랜딩페이지만 표시     │
+│  → 하단 플로팅 버튼: [새 토론 시작]              │
 │                                                  │
 └─────────────────────────────────────────────────┘
 ```
 
+**핵심 전환 흐름:**
+
+```
+채팅(Slack UI)에서 토론 → 토론 종료
+                              ↓
+                    "랜딩페이지 생성 중..." 표시
+                              ↓
+                    GPT-4o가 HTML 코드 생성
+                              ↓
+                    전체 페이지 Swap 애니메이션
+                    (채팅 fade-out → 랜딩페이지 fade-in)
+                              ↓
+                    랜딩페이지가 전체 화면 차지
+                    + [새 토론 시작] 플로팅 버튼
+```
+
 ---
 
-## 5. Agentic Design Patterns (7/7)
+## 5. UI/UX Design
+
+### 5.1 Slack 스타일 채팅 UI
+
+전체 레이아웃은 Slack의 핵심 구조를 따른다:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Agent Arena                                    [Theme]  │
+├────────────┬─────────────────────────────────────────────┤
+│            │  # 한국문화-아이템-토론                      │
+│  CHANNELS  │  ─────────────────────────────────────────  │
+│            │                                             │
+│  # 현재토론 │  ┌─────────────────────────────────────┐   │
+│            │  │ 🤖 PM 에이전트님이 참여했습니다       │   │
+│            │  │ 📊 마케팅 전략가 박서연님이 참여      │   │
+│  ────────  │  └─────────────────────────────────────┘   │
+│            │                                             │
+│  AGENTS    │  ── Round 1: 브레인스토밍 ──               │
+│            │                                             │
+│  🤖 PM     │  ┌──┬──────────────────────────────────┐   │
+│  📊 박서연  │  │🤖│ PM 에이전트          12:31 PM    │   │
+│            │  │  │ 외국인 타겟이라면 우선 어떤 문화   │   │
+│            │  │  │ 요소가 실제로 구매로 이어지는지    │   │
+│            │  │  │ 봐야 해요. K-pop 굿즈? 전통공예?  │   │
+│            │  └──┴──────────────────────────────────┘   │
+│            │                                             │
+│            │  ┌──┬──────────────────────────────────┐   │
+│            │  │📊│ 마케팅 전략가 박서연    12:31 PM  │   │
+│            │  │  │ 시장 데이터를 보면 K-beauty가      │   │
+│            │  │  │ 여전히 성장세예요. 문화 체험형     │   │
+│            │  │  │ 구독 박스는 어떨까요?              │   │
+│            │  └──┴──────────────────────────────────┘   │
+│            │                                             │
+│            │  ── Round 2: 토론/반박 ──                   │
+│            │  ...                                        │
+│            │                                             │
+│            │  ─────────────────────────────────────────  │
+│            │  🔒 이 채널은 AI 에이전트 전용입니다        │
+└────────────┴─────────────────────────────────────────────┘
+```
+
+### 5.2 채팅 UI 세부 스펙
+
+**메시지 컴포넌트:**
+- 아바타: 에이전트 이모지 (원형 배경 + 에이전트 color)
+- 이름: 굵은 글씨 + 역할 뱃지 (예: `PM 에이전트` `PM`)
+- 타임스탬프: 우측 상단, 연한 회색
+- 메시지 본문: 일반 텍스트, 좌측 정렬
+- 스트리밍 중: 타이핑 인디케이터 (세 개 점 애니메이션) → 텍스트 실시간 표시
+
+**시스템 메시지:**
+- 채널 참여/퇴장: 중앙 정렬, 연한 텍스트, 아이콘 포함
+- 라운드 구분선: `── Round N: 제목 ──` 형태의 divider
+
+**사이드바:**
+- 상단: 워크스페이스명 "Agent Arena"
+- CHANNELS 섹션: 현재 토론 채널 (활성 상태 표시)
+- AGENTS 섹션: 현재 참여 중인 에이전트 목록 (온라인 상태 표시)
+  - 퇴장한 에이전트: 오프라인(회색) 표시
+  - 새 에이전트 합류: 온라인(초록) 표시 + 하이라이트
+
+**하단 입력 영역:**
+- 비활성화 상태: "이 채널은 AI 에이전트 전용입니다" 표시
+- 잠금 아이콘으로 읽기 전용 강조
+
+### 5.3 페이지 전환 애니메이션
+
+토론 완료 → 랜딩페이지 전환 시:
+
+1. 채팅에 시스템 메시지: "토론이 완료되었습니다"
+2. 1초 pause
+3. 화면 중앙에 "아이디어를 웹페이지로 만들고 있어요..." + 프로그레스 바
+4. GPT-4o가 HTML 생성 완료
+5. **전환 애니메이션**:
+   - 채팅 UI가 위로 슬라이드 + fade-out (500ms)
+   - 랜딩페이지가 아래에서 슬라이드 + fade-in (500ms)
+   - 또는: 채팅이 축소(scale down) → 랜딩페이지가 확대(scale up)
+6. 랜딩페이지가 전체 뷰포트 차지
+7. 우측 하단 플로팅 버튼: "새 토론 시작" (클릭 시 초기 화면으로)
+
+### 5.4 디자인 토큰
+
+```
+Theme: Dark
+
+Background:
+  --bg-primary: #1a1d21     (Slack dark theme 메인 배경)
+  --bg-sidebar: #19171d     (사이드바)
+  --bg-chat: #1a1d21        (채팅 영역)
+  --bg-message-hover: #222529 (메시지 hover)
+  --bg-input: #222529       (입력 영역)
+
+Text:
+  --text-primary: #d1d2d3   (주요 텍스트)
+  --text-secondary: #ababad (보조 텍스트)
+  --text-muted: #696b6f     (타임스탬프 등)
+  --text-highlight: #ffffff (강조)
+
+Agent Colors:
+  --agent-pm: #3B82F6       (PM - 파란색)
+  --agent-2: #F97316        (Agent 2 - 주황색 계열, 동적)
+  --agent-3: #A855F7        (Agent 3 - 보라색 계열, 동적)
+
+Borders:
+  --border-subtle: #35373b  (구분선)
+  --border-active: #1264a3  (활성 채널)
+
+Status:
+  --status-online: #2bac76  (온라인)
+  --status-offline: #616061 (오프라인/퇴장)
+```
+
+### 5.5 반응형 디자인
+
+| Breakpoint | Layout |
+|------------|--------|
+| Desktop (≥ 1024px) | 사이드바(240px) + 채팅 영역 |
+| Tablet (768-1023px) | 사이드바 접힘(아이콘만) + 채팅 영역 |
+| Mobile (< 768px) | 사이드바 숨김 + 채팅 전체 화면 |
+
+---
+
+## 6. Agentic Design Patterns (7/7)
 
 | Pattern | Implementation | 표시 방법 |
 |---------|---------------|----------|
-| **Multi-Agent** | PM + Agent 2 + 스포닝 에이전트 동시 활동 | 에이전트 카드 복수 표시 |
-| **Inter-Agent Communication** | 에이전트가 서로의 발언을 참조·반박 | 채팅에서 인용/반박 표시 |
-| **Planning** | 오케스트레이터가 라운드 구성, 수렴 타이밍 결정 | 라운드 인디케이터 |
-| **Routing** | 주제에 따라 Agent 2 역할 배정 + 퇴장/스포닝 결정 | 에이전트 생성/퇴장 시 역할 표시 |
+| **Multi-Agent** | PM + Agent 2 + 스포닝 에이전트 동시 활동 | 사이드바 AGENTS 섹션 |
+| **Inter-Agent Communication** | 에이전트가 서로의 발언을 참조·반박 | 채팅 메시지에서 인용 표시 |
+| **Planning** | 오케스트레이터가 라운드 구성, 수렴 타이밍 결정 | 라운드 divider |
+| **Routing** | 주제에 따라 Agent 2 역할 배정 + 퇴장/스포닝 결정 | 채널 참여/퇴장 시스템 메시지 |
 | **Reasoning** | 각 에이전트가 논리적으로 주장·반박 | 메시지 내 논리 전개 |
-| **Reflection** | 오케스트레이터가 토론 분석 → 에이전트 퇴장/교체 판단 | "전문가 필요 감지" 이벤트 |
-| **Tool Use** | 오케스트레이터가 에이전트 생성/퇴장 도구 사용 | 스포닝/퇴장 애니메이션 |
+| **Reflection** | 오케스트레이터가 토론 분석 → 에이전트 퇴장/교체 판단 | "전문가 필요 감지" 시스템 메시지 |
+| **Tool Use** | 오케스트레이터가 에이전트 생성/퇴장 도구 + **랜딩페이지 생성** | 스포닝/퇴장 + 페이지 전환 |
 
 ---
 
-## 6. Technical Architecture
+## 7. Technical Architecture
 
-### 6.1 Tech Stack
+### 7.1 Tech Stack
 
 | 기술 | 버전 | 용도 |
 |------|------|------|
@@ -230,11 +386,11 @@ Round 3: PM + 팬덤 전문가 (2명으로 수렴)
 | React | 19 | UI |
 | TypeScript | 5+ | 타입 안전성 |
 | Tailwind CSS | 4 | 스타일링 |
-| Framer Motion | 12+ | 애니메이션 |
+| Framer Motion | 12+ | 페이지 전환 + UI 애니메이션 |
 | OpenAI | GPT-4o | 에이전트 LLM |
 | SSE | - | 실시간 스트리밍 |
 
-### 6.2 Project Structure
+### 7.2 Project Structure
 
 ```
 agent-arena/
@@ -247,18 +403,19 @@ agent-arena/
 │   │       └── debate/
 │   │           └── route.ts           [P1]
 │   ├── components/
-│   │   ├── TopicInput.tsx             [P3]
-│   │   ├── PresetButtons.tsx          [P3]
-│   │   ├── DebateArena.tsx            [P2]
-│   │   ├── AgentCard.tsx              [P2]
-│   │   ├── AgentMessage.tsx           [P2]
-│   │   ├── AgentSpawnEffect.tsx       [P2]
-│   │   ├── AgentRetireEffect.tsx      [P2]
-│   │   ├── RoundBanner.tsx            [P2]
-│   │   ├── ResultPanel.tsx            [P3]
-│   │   ├── IdeaCard.tsx               [P3]
-│   │   ├── DebateHighlights.tsx       [P3]
-│   │   └── LandingPagePreview.tsx     [P3]
+│   │   ├── chat/
+│   │   │   ├── ChatLayout.tsx         [P2] — Slack 전체 레이아웃 (사이드바 + 채팅)
+│   │   │   ├── Sidebar.tsx            [P2] — 좌측 사이드바 (채널, 에이전트 목록)
+│   │   │   ├── ChatArea.tsx           [P2] — 메인 채팅 영역
+│   │   │   ├── ChatMessage.tsx        [P2] — 개별 메시지 (아바타 + 이름 + 내용)
+│   │   │   ├── SystemMessage.tsx      [P2] — 시스템 메시지 (참여/퇴장/라운드)
+│   │   │   ├── TypingIndicator.tsx    [P2] — 타이핑 중 애니메이션
+│   │   │   ├── ChannelHeader.tsx      [P2] — 채널 상단 헤더
+│   │   │   └── DisabledInput.tsx      [P2] — 비활성 입력 영역
+│   │   ├── TopicInput.tsx             [P3] — 주제 입력 화면
+│   │   ├── PresetButtons.tsx          [P3] — 프리셋 버튼
+│   │   ├── LandingPageView.tsx        [P3] — 생성된 랜딩페이지 렌더링
+│   │   └── PageTransition.tsx         [P2] — 채팅↔랜딩페이지 전환 애니메이션
 │   ├── hooks/
 │   │   └── useDebate.ts              [P3]
 │   └── lib/
@@ -270,10 +427,10 @@ agent-arena/
 ├── tsconfig.json
 ├── next.config.ts
 ├── postcss.config.mjs
-└── tailwind.config.ts (v4는 불필요할 수 있음)
+└── tailwind.config.ts
 ```
 
-### 6.3 Shared Types (`src/lib/types.ts`)
+### 7.3 Shared Types (`src/lib/types.ts`)
 
 ```typescript
 // ── Agent ──
@@ -285,6 +442,7 @@ export interface Agent {
   color: string;       // hex color
   emoji: string;       // 1 emoji character
   isFixed?: boolean;   // PM은 true
+  status: 'online' | 'offline';  // Slack 온라인 상태
 }
 
 // ── Messages ──
@@ -294,13 +452,34 @@ export interface AgentMessage {
   content: string;
   round: number;
   timestamp: number;
-  isExitMessage?: boolean;  // 퇴장 메시지 여부
+  isExitMessage?: boolean;
 }
+
+// ── System Messages (Slack 스타일) ──
+export type SystemMessageType =
+  | 'agent_join'       // "~님이 채널에 참여했습니다"
+  | 'agent_leave'      // "~님이 채널을 나갔습니다"
+  | 'round_divider'    // "── Round N: 제목 ──"
+  | 'debate_complete'  // "토론이 완료되었습니다"
+  | 'generating';      // "랜딩페이지를 생성 중..."
+
+export interface SystemMessage {
+  id: string;
+  type: SystemMessageType;
+  content: string;
+  timestamp: number;
+  agentId?: string;    // agent_join, agent_leave 시
+}
+
+// ── Chat Message Union ──
+export type ChatItem =
+  | { kind: 'message'; data: AgentMessage }
+  | { kind: 'system'; data: SystemMessage };
 
 // ── Rounds ──
 export interface DebateRound {
   number: number;
-  title: string;           // e.g. "브레인스토밍", "토론/반박", "최종 수렴"
+  title: string;
   status: 'pending' | 'active' | 'done';
 }
 
@@ -315,41 +494,48 @@ export interface FinalIdea {
   nextSteps: string[];
 }
 
-export interface DebateHighlight {
-  round: number;
-  summary: string;
-}
-
 export interface DebateResult {
   idea: FinalIdea;
-  highlights: DebateHighlight[];
 }
 
 // ── Debate State (Frontend) ──
 export type DebateStatus =
-  | 'idle'              // 초기 입력 대기
-  | 'creating'          // 에이전트 생성 중
-  | 'debating'          // 토론 진행 중
-  | 'retiring'          // 에이전트 퇴장 중
-  | 'spawning'          // 새 에이전트 스포닝 중
+  | 'idle'               // 주제 입력 대기
+  | 'creating'           // 에이전트 생성 중
+  | 'debating'           // 토론 진행 중 (Slack 채팅)
+  | 'retiring'           // 에이전트 퇴장 중
+  | 'spawning'           // 새 에이전트 스포닝 중
   | 'generating_landing' // 랜딩페이지 생성 중
-  | 'finished'          // 토론 완료, 결과 + 랜딩페이지 표시
+  | 'landing'            // 랜딩페이지 표시 중
   | 'error';
 
 export interface DebateState {
   status: DebateStatus;
   topic: string;
+  channelName: string;           // Slack 채널명 (예: "#한국문화-아이템-토론")
   agents: Agent[];
-  retiredAgents: Agent[];         // 퇴장한 에이전트 목록
+  retiredAgents: Agent[];
   rounds: DebateRound[];
-  messages: AgentMessage[];
+  chatItems: ChatItem[];         // 채팅 메시지 + 시스템 메시지 통합
   currentRound: number;
-  activeAgentId: string | null;   // 현재 발언 중인 에이전트
-  streamingText: string;          // 현재 스트리밍 중인 텍스트
+  activeAgentId: string | null;
+  streamingText: string;
   result: DebateResult | null;
-  landingPageHtml: string | null; // 생성된 랜딩페이지 HTML
+  landingPageHtml: string | null;
   error: string | null;
 }
+
+// ── State Transitions (useReducer 패턴 권장) ──
+// idle → creating (토론 시작)
+// creating → debating (agents_created 수신)
+// debating → retiring (agent_retire 수신)
+// retiring → spawning (spawn_trigger 수신)
+// spawning → debating (agent_spawned 수신)
+// debating → generating_landing (final_result 수신)
+// generating_landing → landing (landing_page_ready 수신)
+// * → error (error 이벤트 또는 SSE 연결 끊김)
+// landing → idle ("새 토론 시작" 클릭)
+// error → idle ("새 토론 시작" 클릭)
 
 // ── SSE Events (API → Client) ──
 export type SSEEventType =
@@ -362,6 +548,7 @@ export type SSEEventType =
   | 'spawn_trigger'
   | 'agent_spawned'
   | 'final_result'
+  | 'landing_page_chunk'    // 랜딩페이지 HTML 스트리밍
   | 'landing_page_ready'
   | 'debate_end'
   | 'error';
@@ -369,6 +556,7 @@ export type SSEEventType =
 // Event Payloads
 export interface AgentsCreatedEvent {
   agents: Agent[];
+  channelName: string;
 }
 
 export interface RoundStartEvent {
@@ -408,8 +596,12 @@ export interface FinalResultEvent {
   result: DebateResult;
 }
 
+export interface LandingPageChunkEvent {
+  chunk: string;
+}
+
 export interface LandingPageReadyEvent {
-  html: string;     // 완성된 랜딩페이지 HTML (인라인 CSS 포함)
+  html: string;
 }
 
 export interface DebateEndEvent {
@@ -419,7 +611,7 @@ export interface DebateEndEvent {
 }
 ```
 
-### 6.4 API Specification
+### 7.4 API Specification
 
 #### `POST /api/debate`
 
@@ -436,7 +628,7 @@ export interface DebateEndEvent {
 
 **Event Sequence:**
 ```
-1.  agents_created    → Agent[] (PM 고정 + Agent 2 자동 생성)
+1.  agents_created    → { agents: Agent[], channelName: string }
 2.  round_start       → { round: 1, title: "브레인스토밍" }
 3.  agent_speak_start → { agentId, round }
 4.  agent_speak_chunk → { agentId, chunk } (반복, 스트리밍)
@@ -444,14 +636,15 @@ export interface DebateEndEvent {
 6.  (Agent 2도 3-5 반복)
 7.  round_start       → { round: 2, title: "토론/반박" }
 8.  (PM, Agent 2 발언 반복)
-9.  agent_retire      → { agentId, exitMessage }  (Agent 2 퇴장)
+9.  agent_retire      → { agentId, exitMessage }
 10. spawn_trigger     → { reason: "..." }
-11. agent_spawned     → Agent (새 전문가 에이전트)
+11. agent_spawned     → { agent: Agent }
 12. round_start       → { round: 3, title: "최종 수렴" }
 13. (PM + 새 에이전트 발언)
-14. final_result      → DebateResult
-15. landing_page_ready → { html } (FinalIdea 기반 랜딩페이지)
-16. debate_end        → { totalRounds, totalAgents, totalMessages }
+14. final_result      → { result: DebateResult }
+15. landing_page_chunk → { chunk } (HTML 스트리밍, 반복)
+16. landing_page_ready → { html } (완성된 HTML)
+17. debate_end        → { totalRounds, totalAgents, totalMessages }
 ```
 
 **Error Event:**
@@ -460,7 +653,15 @@ event: error
 data: { "message": "OpenAI API 호출 실패" }
 ```
 
-### 6.5 Orchestrator Logic (`src/lib/orchestrator.ts`)
+**Error Responses:**
+
+| Status | Code | Message | Description |
+|--------|------|---------|-------------|
+| 400 | INVALID_INPUT | Topic is required | 주제 미입력 |
+| 500 | LLM_ERROR | OpenAI API call failed | GPT-4o 호출 실패 |
+| 500 | STREAM_ERROR | SSE stream interrupted | 스트리밍 중단 |
+
+### 7.5 Orchestrator Logic (`src/lib/orchestrator.ts`)
 
 ```
 async function* runDebate(topic: string): AsyncGenerator<SSEEvent>
@@ -468,7 +669,7 @@ async function* runDebate(topic: string): AsyncGenerator<SSEEvent>
 내부 흐름:
 1. analyzeTopicAndCreateAgents(topic)
    → GPT-4o 1회: 주제 분석 + PM(고정) + Agent 2 역할/성격 결정
-   → yield agents_created
+   → yield agents_created (channelName 포함)
 
 2. Round 1 (브레인스토밍):
    → yield round_start
@@ -482,7 +683,7 @@ async function* runDebate(topic: string): AsyncGenerator<SSEEvent>
 
 4. analyzeAndRetireSpawn(topic, agents, messages)
    → GPT-4o 1회: 토론 분석 → 퇴장할 에이전트 + 새 에이전트 동시 결정
-   → yield agent_retire (Agent 2 퇴장 메시지)
+   → yield agent_retire (Agent 2 퇴장)
    → yield spawn_trigger (이유)
    → yield agent_spawned (새 에이전트)
 
@@ -497,7 +698,8 @@ async function* runDebate(topic: string): AsyncGenerator<SSEEvent>
 
 7. generateLandingPage(finalIdea)
    → GPT-4o 1회: FinalIdea 기반 랜딩페이지 HTML 생성
-   → yield landing_page_ready
+   → yield landing_page_chunk (스트리밍)
+   → yield landing_page_ready (완성)
 
 8. yield debate_end
 ```
@@ -512,7 +714,20 @@ async function* runDebate(topic: string): AsyncGenerator<SSEEvent>
 - 랜딩페이지 생성: 1회
 - **총 10회** (스트리밍이라 체감 빠름, 예상 총 시간 45~65초)
 
-### 6.6 System Prompts (`src/lib/prompts.ts`)
+**GPT-4o 호출 안정성 정책:**
+- 개별 호출 timeout: 30초
+- 실패 시 retry: 1회
+- `previousMessages`는 **최근 6개 메시지로 제한** (토큰 폭발 방지)
+- JSON 응답 요청 시 `response_format: { type: "json_object" }` 사용
+- 랜딩페이지 생성 실패 시: FinalIdea 데이터를 **하드코딩 fallback 템플릿**에 삽입하여 표시
+- 서버 측 `AbortController` 사용: 클라이언트 SSE 연결 종료 시 진행 중인 GPT-4o 호출 즉시 중단
+
+**SSE 연결 안정성:**
+- 프론트엔드 `EventSource.onerror` 핸들링 필수
+- 연결 끊김 시 "연결이 끊어졌습니다. 새 토론을 시작해주세요" 에러 UI 표시
+- 재연결/복구는 Out of Scope (Hobby 등급)
+
+### 7.6 System Prompts (`src/lib/prompts.ts`)
 
 #### 오케스트레이터: 에이전트 생성
 
@@ -529,7 +744,7 @@ PM은 이미 고정되어 있습니다:
 
 주제: {topic}
 
-다음 JSON 형식으로 Agent 2만 응답:
+다음 JSON 형식으로 응답:
 {
   "agent": {
     "name": "이름 (한글, 직함 포함)",
@@ -538,6 +753,7 @@ PM은 이미 고정되어 있습니다:
     "color": "hex color (빨강/주황/보라 계열)",
     "emoji": "대표 이모지 1개"
   },
+  "channelName": "주제를 2-3단어 한글로 요약한 채널명 (예: 한국문화-아이템-토론)",
   "roundPlan": {
     "round1": "브레인스토밍 주제",
     "round2": "심화 토론 포인트",
@@ -550,6 +766,7 @@ PM은 이미 고정되어 있습니다:
 - PM이 브레이크라면 Agent 2는 엑셀
 - 이름은 "마케팅 전략가 박서연" 같은 형태
 - 성격이 뚜렷해야 토론이 재밌음
+- channelName은 Slack 채널명 스타일 (하이픈 구분, 한글 가능)
 ```
 
 #### PM 에이전트 시스템 프롬프트
@@ -662,12 +879,7 @@ PM은 이미 고정되어 있습니다:
     "differentiator": "핵심 차별점",
     "marketSize": "예상 시장 규모",
     "nextSteps": ["다음 단계 1", "다음 단계 2", "다음 단계 3"]
-  },
-  "highlights": [
-    { "round": 1, "summary": "이 라운드의 핵심 전개" },
-    { "round": 2, "summary": "..." },
-    { "round": 3, "summary": "..." }
-  ]
+  }
 }
 ```
 
@@ -675,6 +887,7 @@ PM은 이미 고정되어 있습니다:
 
 ```
 아래 아이디어를 기반으로 멋진 랜딩페이지 HTML을 생성하세요.
+이 HTML은 실제 웹페이지로 보여지므로 완성도 높게 만드세요.
 
 아이디어:
 - 제목: {idea.title}
@@ -688,543 +901,199 @@ PM은 이미 고정되어 있습니다:
 규칙:
 - 완전한 단일 HTML 파일 (인라인 CSS, 외부 의존성 없음)
 - 다크 테마 (배경 #0a0a0a, 텍스트 #fafafa)
-- 모던 디자인 (그라디언트, 글래스모피즘)
+- 모던 디자인 (그라디언트, 글래스모피즘, subtle 애니메이션)
 - 섹션: Hero (제목 + 한줄 설명 + CTA) → Features (차별점) → Target → Revenue → CTA
 - 반응형 (모바일 대응)
 - 한국어
 - <html>, <head>, <body> 태그 포함한 완전한 HTML
-- JavaScript 없이 순수 HTML + CSS만
-- 응답은 HTML 코드만 (```html 태그 없이 순수 HTML)
+- CSS 애니메이션 사용 가능 (scroll fade-in 등)
+- JavaScript 최소한 (스크롤 애니메이션 정도만)
+- 응답은 HTML 코드만 (마크다운 코드블록 없이 순수 HTML)
 ```
 
 ---
 
-## 7. UI/UX Design
+## 8. User Stories
 
-### 7.1 Design Principles
+### 8.1 Primary User
 
-- **다크 테마** 기본 (해커톤 + 테크 느낌)
-- **에이전트 컬러 코딩** — 각 에이전트마다 고유 color, 메시지 보더/아이콘에 적용
-- **실시간 피드감** — 스트리밍 타이핑 효과, 라운드 전환 애니메이션
-- **깔끔한 레이아웃** — 과하지 않게, 여백 충분히
-- **퇴장/등장 드라마** — 에이전트 교체가 시각적으로 극적
+As a **사업 기획자/창업 준비생**, I want to **주제를 입력하면 AI 에이전트들이 Slack처럼 토론하고 결과를 랜딩페이지로 보여주는 것** so that **아이디어를 빠르게 검증하고 시각적으로 확인할 수 있다**.
 
-### 7.2 Screens
+### 8.2 Acceptance Criteria (Gherkin)
 
-#### Screen 1: 입력 (idle)
+```gherkin
+Scenario: 주제 입력 후 Slack 채팅 토론 시작
+  Given 사용자가 메인 화면에 있다
+  When "외국인 타겟 한국문화 아이템" 주제를 입력한다
+  Then Slack 스타일 채팅 UI로 전환된다
+  And 채널명이 "#한국문화-아이템-토론"으로 표시된다
+  And PM 에이전트와 전문가 에이전트가 채널에 참여한다
+  And 토론이 실시간 스트리밍으로 진행된다
 
-```
-┌─────────────────────────────────────────────────────┐
-│                                                      │
-│              🏟️ Agent Arena                          │
-│         AI 에이전트들의 아이디어 배틀                 │
-│                                                      │
-│  ┌───────────────────────────────────────────────┐  │
-│  │  어떤 주제로 토론할까요?                       │  │
-│  │                                                │  │
-│  │  ┌────────────────────────────────┐  [시작 →] │  │
-│  │  │                                │           │  │
-│  │  └────────────────────────────────┘           │  │
-│  └───────────────────────────────────────────────┘  │
-│                                                      │
-│  💡 추천 주제                                        │
-│  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ │
-│  │ 🇰🇷 외국인 타겟 │ │ 💻 1인 SaaS  │ │ 📱 Z세대    │ │
-│  │ 한국문화 아이템 │ │ 사업 아이디어 │ │ 소셜 플랫폼 │ │
-│  └──────────────┘ └──────────────┘ └─────────────┘ │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
+Scenario: 에이전트 퇴장 및 새 에이전트 합류
+  Given Round 2 토론이 진행 중이다
+  When 오케스트레이터가 에이전트 교체를 결정한다
+  Then 기존 에이전트의 퇴장 시스템 메시지가 표시된다
+  And 사이드바에서 해당 에이전트가 오프라인으로 변경된다
+  And 새 에이전트의 합류 시스템 메시지가 표시된다
+  And 사이드바에 새 에이전트가 온라인으로 추가된다
 
-#### Screen 2: 토론 진행 (debating)
-
-```
-┌─────────────────────────────────────────────────────┐
-│  🏟️ Agent Arena            Round 2/3    ⏱ 00:23    │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  ┌─ Agents ───────────────────────────────────────┐ │
-│  │                                                 │ │
-│  │  ┌───────────┐   ⚡ VS ⚡   ┌───────────┐      │ │
-│  │  │ 📋        │              │ 🎨        │      │ │
-│  │  │ PM        │              │ 마케팅    │      │ │
-│  │  │ 에이전트  │              │ 전략가    │      │ │
-│  │  │ ●●● 발언중│              │ ○○○ 대기  │      │ │
-│  │  └───────────┘              └───────────┘      │ │
-│  │                                                 │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                      │
-│  ┌─ Debate ───────────────────────────────────────┐ │
-│  │                                                 │ │
-│  │  ── Round 1: 브레인스토밍 ──                    │ │
-│  │                                                 │ │
-│  │  📋 한류 시장이 크다는 건 알겠는데, 구체적으로  │ │
-│  │     유저가 돈을 내야 하는 이유가 뭐죠?          │ │
-│  │                                                 │ │
-│  │  🎨 K-food 구독 박스 시장을 보세요. 해외에서    │ │
-│  │     월 $30에 한국 과자 받아보는 수요가 확실해요. │ │
-│  │                                                 │ │
-│  │  ── Round 2: 토론/반박 ──                       │ │
-│  │                                                 │ │
-│  │  📋 구독 박스는 물류 비용이 핵심인데, 초기      │ │
-│  │     스타트업에서 감당 가능할까요? 디지털 상품이▌ │ │
-│  │                                                 │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-#### Screen 2.5: 에이전트 퇴장 + 스포닝 (retiring → spawning)
-
-```
-┌─────────────────────────────────────────────────────┐
-│                                                      │
-│  ┌─ Agents ───────────────────────────────────────┐ │
-│  │                                                 │ │
-│  │  ┌───────────┐              ┌───────────┐      │ │
-│  │  │ 📋 PM     │              │ 🎨 마케팅 │      │ │
-│  │  │ (고정)    │              │ ← fadeOut  │      │ │
-│  │  └───────────┘              └───────────┘      │ │
-│  │                                                 │ │
-│  │  💬 "팬덤 비즈니스는 제 전문이 아닙니다.       │ │
-│  │      전문가에게 맡기겠습니다!"                  │ │
-│  │                                                 │ │
-│  │         ⚡ 전문가 에이전트 감지! ⚡              │ │
-│  │    "K-pop 팬덤 비즈니스 전문 지식 필요"         │ │
-│  │                                                 │ │
-│  │              ┌───────────┐                      │ │
-│  │              │ ⭐        │ ← 등장 애니메이션    │ │
-│  │              │ 팬덤      │                      │ │
-│  │              │ 이코노미  │                      │ │
-│  │              │ 전문가    │                      │ │
-│  │              └───────────┘                      │ │
-│  │                                                 │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-#### Screen 3: 결과 (finished)
-
-```
-┌─────────────────────────────────────────────────────┐
-│  🏟️ Agent Arena            토론 완료! 🎉            │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  ┌─ 최종 아이디어 ────────────────────────────────┐ │
-│  │                                                 │ │
-│  │  💡 AI 팬아트 크리에이터 플랫폼                 │ │
-│  │  K-pop 팬이 저작권 걱정 없이 AI로               │ │
-│  │  팬아트를 만드는 플랫폼                         │ │
-│  │                                                 │ │
-│  │  🎯 타겟      해외 K-pop 팬 (18-30세)          │ │
-│  │  💰 수익모델   프리미엄 AI 도구 월 $9.99       │ │
-│  │  🔥 차별점    저작권 안전 + AI 생성 도구        │ │
-│  │  📊 시장규모   $2.3B (팬덤 이코노미)           │ │
-│  │                                                 │ │
-│  │  📋 Next Steps                                  │ │
-│  │  1. MVP 프로토타입 개발                         │ │
-│  │  2. K-pop 팬 커뮤니티 검증                      │ │
-│  │  3. 저작권 법률 검토                            │ │
-│  │                                                 │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                      │
-│  ┌─ 토론 하이라이트 ──────────────────────────────┐ │
-│  │                                                 │ │
-│  │  R1 ●───── K-food vs K-culture 체험             │ │
-│  │  R2 ●───── 디지털 상품으로 수렴                 │ │
-│  │  R3 ●───── 팬아트 + AI 조합 최종 선택           │ │
-│  │                                                 │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                      │
-│  ┌─ 랜딩페이지 미리보기 ─────────────────────────┐ │
-│  │                                                 │ │
-│  │  ┌───────────────────────────────────────────┐ │ │
-│  │  │  (iframe - srcdoc)                         │ │ │
-│  │  │                                            │ │ │
-│  │  │  ✨ AI 팬아트 크리에이터                │ │ │
-│  │  │  K-pop 팬이 저작권 걱정 없이...            │ │ │
-│  │  │                                            │ │ │
-│  │  │  [시작하기]                                 │ │ │
-│  │  │                                            │ │ │
-│  │  └───────────────────────────────────────────┘ │ │
-│  │                                                 │ │
-│  │  이 아이디어의 랜딩페이지가 자동 생성되었습니다 │ │
-│  │                                                 │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                      │
-│         [🔄 새 토론 시작]                            │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-### 7.3 Animations (Framer Motion)
-
-| 요소 | 애니메이션 | 라이브러리 |
-|------|----------|-----------|
-| 에이전트 카드 등장 | scale 0→1 + fadeIn + bounce | framer-motion |
-| **에이전트 퇴장** | **fadeOut + scale 1→0 + slideOut** | **framer-motion** |
-| **퇴장 메시지** | **fadeIn + italic 스타일** | **framer-motion + CSS** |
-| 새 에이전트 스포닝 | 번개 이펙트 + scale 0→1 + glow | framer-motion |
-| 메시지 등장 | slideUp + fadeIn | framer-motion |
-| 스트리밍 텍스트 | 타이핑 커서 깜빡임 | CSS animation |
-| 라운드 전환 | 배너 slideDown + 컬러 전환 | framer-motion |
-| 결과 카드 | staggered fadeIn (항목별 순차) | framer-motion |
-| 랜딩페이지 로딩 | 스켈레톤 shimmer → fadeIn | framer-motion |
-| 에이전트 발언 중 표시 | 점 3개 펄스 애니메이션 | CSS animation |
-
----
-
-## 8. Team Assignment (병렬 개발)
-
-### 8.1 작업 분배 원칙
-
-```
-┌─────────────────────────────────────────────────────┐
-│                                                      │
-│  Person 1 (P1): Backend                              │
-│  ─────────────────────                               │
-│  담당: API, 오케스트레이터, 프롬프트, 타입            │
-│  파일: src/lib/*, src/app/api/*                       │
-│                                                      │
-│  Person 2 (P2): Frontend Core (토론 UI)              │
-│  ─────────────────────                               │
-│  담당: 레이아웃, 에이전트 카드, 토론 메시지,          │
-│        애니메이션, 퇴장 효과                          │
-│  파일: src/app/page.tsx, layout.tsx,                  │
-│        src/components/Debate*, Agent*, Round*         │
-│                                                      │
-│  Person 3 (P3): Frontend Input/Result + Hook         │
-│  ─────────────────────                               │
-│  담당: 입력 UI, 결과 패널, SSE 훅, 프리셋            │
-│  파일: src/components/Topic*, Result*, Idea*,         │
-│        Debate*, Preset*, src/hooks/*                  │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-### 8.2 Person 1: Backend
-
-**파일 목록:**
-- `src/lib/types.ts` — 공유 타입 (최초 작성, 다른 사람에게 공유)
-- `src/lib/orchestrator.ts` — 토론 오케스트레이션 로직
-- `src/lib/prompts.ts` — 시스템 프롬프트 모음
-- `src/app/api/debate/route.ts` — SSE 스트리밍 API
-
-**핵심 산출물:**
-- `POST /api/debate` 엔드포인트가 SSE로 토론 + 랜딩페이지를 스트리밍
-- PM(고정) + Agent 2 생성 → 라운드별 발언 → 퇴장 → 스포닝 → 결과 → 랜딩페이지 순서
-
-**의존성:**
-- OpenAI API key (`OPENAI_API_KEY`)
-- GPT-4o 모델
-
-**테스트 방법:**
-```bash
-curl -N -X POST http://localhost:3000/api/debate \
-  -H "Content-Type: application/json" \
-  -d '{"topic":"외국인 타겟 한국문화 아이템"}'
-```
-
-### 8.3 Person 2: Frontend Core
-
-**파일 목록:**
-- `src/app/layout.tsx` — 전역 레이아웃, 폰트, 메타데이터
-- `src/app/page.tsx` — 메인 페이지 (상태에 따라 화면 분기)
-- `src/app/globals.css` — 글로벌 스타일, 커스텀 CSS 변수
-- `src/components/DebateArena.tsx` — 토론 메인 컨테이너
-- `src/components/AgentCard.tsx` — 에이전트 프로필 카드
-- `src/components/AgentMessage.tsx` — 토론 메시지 버블
-- `src/components/AgentSpawnEffect.tsx` — 새 에이전트 등장 효과
-- `src/components/AgentRetireEffect.tsx` — 에이전트 퇴장 효과
-- `src/components/RoundBanner.tsx` — 라운드 구분 배너
-
-**Props 인터페이스 (P3의 useDebate에서 받음):**
-```typescript
-// DebateArena.tsx
-interface DebateArenaProps {
-  agents: Agent[];
-  retiredAgents: Agent[];
-  messages: AgentMessage[];
-  currentRound: number;
-  activeAgentId: string | null;
-  streamingText: string;
-  status: DebateStatus;
-}
-
-// AgentCard.tsx
-interface AgentCardProps {
-  agent: Agent;
-  isActive: boolean;      // 현재 발언 중
-  isNew?: boolean;         // 스포닝 애니메이션 트리거
-  isRetiring?: boolean;    // 퇴장 애니메이션 트리거
-  isFixed?: boolean;       // PM 고정 표시
-}
-
-// AgentMessage.tsx
-interface AgentMessageProps {
-  agent: Agent;            // 색상/이모지용
-  message: AgentMessage;
-  isStreaming?: boolean;   // 타이핑 커서 표시
-  streamingText?: string;
-}
-
-// AgentRetireEffect.tsx
-interface AgentRetireEffectProps {
-  agent: Agent;
-  exitMessage: string;
-  onComplete: () => void;  // 애니메이션 완료 콜백
-}
-
-// RoundBanner.tsx
-interface RoundBannerProps {
-  round: DebateRound;
-}
-```
-
-**개발 시 Mock 데이터:**
-```typescript
-const mockAgents: Agent[] = [
-  { id: 'pm', name: 'PM 에이전트', role: '프로덕트 매니저', personality: '현실적, 날카로움', color: '#3B82F6', emoji: '📋', isFixed: true },
-  { id: 'a2', name: '마케팅 전략가 박서연', role: '마케팅 전략', personality: '공격적, 시장 중심', color: '#EF4444', emoji: '🎨' },
-];
-
-const mockMessages: AgentMessage[] = [
-  { id: 'm1', agentId: 'pm', content: '한류 시장이 크다는 건 알겠는데, 유저가 돈을 내야 하는 이유가 뭐죠?', round: 1, timestamp: 0 },
-  { id: 'm2', agentId: 'a2', content: 'K-food 구독 박스 시장을 보세요. 해외에서 월 $30에 한국 과자 받아보는 수요가 확실합니다.', round: 1, timestamp: 1 },
-];
-```
-
-### 8.4 Person 3: Frontend Input/Result + Hook
-
-**파일 목록:**
-- `src/hooks/useDebate.ts` — SSE 연결 + 이벤트 파싱 + DebateState 관리
-- `src/components/TopicInput.tsx` — 주제 입력 폼
-- `src/components/PresetButtons.tsx` — 프리셋 주제 버튼들
-- `src/components/ResultPanel.tsx` — 결과 전체 컨테이너 (아이디어 + 하이라이트 + 랜딩페이지)
-- `src/components/IdeaCard.tsx` — 최종 아이디어 카드
-- `src/components/DebateHighlights.tsx` — 토론 하이라이트 타임라인
-- `src/components/LandingPagePreview.tsx` — 랜딩페이지 iframe 미리보기
-
-**useDebate Hook 인터페이스:**
-```typescript
-interface UseDebateReturn {
-  state: DebateState;
-  startDebate: (topic: string) => void;
-  reset: () => void;
-}
-
-function useDebate(): UseDebateReturn;
-```
-
-**useDebate 핵심 로직:**
-```typescript
-const startDebate = async (topic: string) => {
-  const response = await fetch('/api/debate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ topic }),
-  });
-
-  const reader = response.body!.getReader();
-  const decoder = new TextDecoder();
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    const text = decoder.decode(value);
-    // SSE 포맷 파싱: "event: xxx\ndata: {...}\n\n"
-    // → 이벤트 타입별 state 업데이트
-    // → agent_retire: retiredAgents에 추가, agents에서 제거
-    // → landing_page_ready: landingPageHtml에 저장
-  }
-};
-```
-
-**TopicInput Props:**
-```typescript
-interface TopicInputProps {
-  onSubmit: (topic: string) => void;
-  isDisabled: boolean;
-}
-```
-
-**PresetButtons Props:**
-```typescript
-interface PresetButtonsProps {
-  onSelect: (topic: string) => void;
-  isDisabled: boolean;
-}
-
-const PRESETS = [
-  { emoji: '🇰🇷', label: '외국인 타겟 한국문화 아이템', topic: '요새 한국문화가 핫해서 외국인 타겟으로 아이템을 만들고 싶은데 아이디어가 없어' },
-  { emoji: '💻', label: '1인 SaaS 사업 아이디어', topic: '개발자 1명이서 만들 수 있는 SaaS 사업 아이디어를 찾고 있어' },
-  { emoji: '📱', label: 'Z세대 소셜 플랫폼', topic: 'Z세대를 타겟으로 한 새로운 소셜 미디어 플랫폼 아이디어가 필요해' },
-];
-```
-
-**ResultPanel Props:**
-```typescript
-interface ResultPanelProps {
-  result: DebateResult;
-  agents: Agent[];
-  landingPageHtml: string | null;
-  isGeneratingLanding: boolean;
-  onNewDebate: () => void;
-}
-```
-
-**LandingPagePreview Props:**
-```typescript
-interface LandingPagePreviewProps {
-  html: string;
-}
-// → iframe srcdoc로 렌더링
-// → sandbox="allow-same-origin" (보안: 스크립트 차단)
-// → 높이 600px, 너비 100%, rounded border
+Scenario: 토론 완료 후 랜딩페이지 전환
+  Given Round 3 토론이 완료되었다
+  When 최종 아이디어가 도출된다
+  Then 채팅에 "토론이 완료되었습니다" 시스템 메시지가 표시된다
+  And "랜딩페이지를 생성 중..." 로딩이 표시된다
+  And 전환 애니메이션과 함께 채팅 UI가 사라진다
+  And 생성된 랜딩페이지가 전체 화면에 표시된다
+  And "새 토론 시작" 플로팅 버튼이 표시된다
 ```
 
 ---
 
-## 9. Integration Plan (합치기)
+## 9. Functional Requirements
 
-### 9.1 순서
+| ID | Requirement | Priority | Dependencies |
+|----|------------|----------|--------------|
+| FR-001 | 주제 입력 및 프리셋 선택 | P0 (Must) | - |
+| FR-002 | SSE 기반 실시간 토론 스트리밍 | P0 (Must) | - |
+| FR-003 | Slack 스타일 채팅 메시지 렌더링 | P0 (Must) | FR-002 |
+| FR-004 | 에이전트 참여/퇴장 시스템 메시지 | P1 (Should) | FR-003 |
+| FR-005 | 사이드바 에이전트 온/오프라인 상태 | P1 (Should) | FR-003 |
+| FR-006 | 라운드 divider 표시 | P1 (Should) | FR-003 |
+| FR-007 | 타이핑 인디케이터 애니메이션 | P1 (Should) | FR-003 |
+| FR-008 | 토론 완료 후 랜딩페이지 HTML 생성 | P0 (Must) | FR-002 |
+| FR-009 | Full Page Swap 기본 전환 (조건부 렌더링) | P0 (Must) | FR-008 |
+| FR-009a | 전환 애니메이션 (Framer Motion fade/slide) | P1 (Should) | FR-009 |
+| FR-010 | "새 토론 시작" 플로팅 버튼 | P0 (Must) | FR-009 |
+| FR-011 | 채널명 자동 생성 (주제 기반) | P2 (Could) | FR-001 |
+| FR-012 | 반응형 레이아웃 (모바일 대응) | P1 (Should) | FR-003 |
+| FR-013 | Topic 입력 검증 (5~200자, trim, 빈 문자열 체크) | P1 (Should) | FR-001 |
+| FR-014 | SSE 연결 끊김 에러 UI | P1 (Should) | FR-002 |
 
+---
+
+## 10. Non-Functional Requirements
+
+### 10.0 Scale Grade
+
+**Hobby** — 해커톤 프로젝트, 3명 개발, 사용자 수백 명 이하.
+
+### 10.1 Performance SLA
+
+| 지표 | 목표값 |
+|------|--------|
+| 첫 에이전트 메시지 표시 | < 5초 (SSE 스트리밍 시작) |
+| 전체 토론 완료 | 45~65초 |
+| 랜딩페이지 생성 | < 15초 |
+| 페이지 전환 애니메이션 | < 1초 |
+
+### 10.2 Availability
+
+**95% uptime** — Hobby 등급, 허용 다운타임 월 36시간.
+
+### 10.3 Security
+
+- Authentication: None (해커톤 데모)
+- OpenAI API Key: 서버 환경변수로만 관리
+- 사용자 입력(topic): XSS 방지를 위한 sanitize 필수
+- 생성된 랜딩페이지 HTML: `srcdoc` + `sandbox="allow-scripts"` (allow-same-origin 제외)로 렌더링 (DOM 격리, parent 접근 차단)
+
+---
+
+## 11. Implementation Phases
+
+### Phase 1: MVP Core (P1 - Backend)
+- [ ] `types.ts` — 공유 타입 정의
+- [ ] `prompts.ts` — 시스템 프롬프트
+- [ ] `orchestrator.ts` — 토론 오케스트레이터 + 랜딩페이지 생성
+- [ ] `route.ts` — SSE API 엔드포인트
+**Deliverable**: 토론 API가 동작하고 랜딩페이지 HTML이 생성됨
+
+### Phase 2: Chat UI (P2 - Frontend Core)
+- [ ] `ChatLayout.tsx` — Slack 전체 레이아웃
+- [ ] `Sidebar.tsx` — 사이드바 (채널, 에이전트 목록)
+- [ ] `ChatArea.tsx` — 채팅 영역
+- [ ] `ChatMessage.tsx` — 메시지 컴포넌트
+- [ ] `SystemMessage.tsx` — 시스템 메시지
+- [ ] `TypingIndicator.tsx` — 타이핑 애니메이션
+- [ ] `ChannelHeader.tsx` — 채널 헤더
+- [ ] `DisabledInput.tsx` — 비활성 입력
+- [ ] `PageTransition.tsx` — 페이지 전환 애니메이션
+- [ ] `layout.tsx`, `page.tsx`, `globals.css`
+**Deliverable**: Slack 스타일 채팅 UI + 페이지 전환 동작
+
+### Phase 3: Input/Output (P3 - Frontend IO)
+- [ ] `TopicInput.tsx` — 주제 입력 화면
+- [ ] `PresetButtons.tsx` — 프리셋 버튼
+- [ ] `LandingPageView.tsx` — 랜딩페이지 렌더링 (sandbox iframe)
+- [ ] `useDebate.ts` — SSE 연결 + 상태 관리 Hook
+**Deliverable**: 전체 플로우 (입력 → 채팅 → 랜딩페이지) 완성
+
+---
+
+## 12. Team Assignment (Parallel Development)
+
+| 담당 | 역할 | 작업 파일 |
+|------|------|----------|
+| **P1 (Backend)** | 타입, 오케스트레이터, API | `types.ts`, `orchestrator.ts`, `prompts.ts`, `route.ts` |
+| **P2 (Frontend Core)** | Slack 채팅 UI, 애니메이션 | `ChatLayout`, `Sidebar`, `ChatArea`, `ChatMessage`, `SystemMessage`, `TypingIndicator`, `ChannelHeader`, `DisabledInput`, `PageTransition`, `layout.tsx`, `page.tsx` |
+| **P3 (Frontend IO)** | 입력, 결과, Hook | `TopicInput`, `PresetButtons`, `LandingPageView`, `useDebate.ts` |
+
+**Integration Sequence:**
 ```
-[T+0:00] P1이 types.ts 작성 → Git push → P2, P3 pull
-[T+0:00] P2, P3는 각자 컴포넌트 작업 시작 (mock 데이터로)
-[T+1:30] P1이 API 완성 → Git push
-[T+1:30] P3가 useDebate hook 완성 → API 연결 테스트
-[T+2:00] 1차 통합: page.tsx에서 useDebate + 컴포넌트 조립
-[T+2:30] 통합 테스트 + 버그 수정
-[T+3:00] UI 폴리시 + 프리셋 테스트
-[T+3:30] 최종 배포
-```
-
-### 9.2 합체 포인트 (page.tsx)
-
-```typescript
-'use client';
-
-import { useDebate } from '@/hooks/useDebate';
-import { TopicInput } from '@/components/TopicInput';
-import { PresetButtons } from '@/components/PresetButtons';
-import { DebateArena } from '@/components/DebateArena';
-import { ResultPanel } from '@/components/ResultPanel';
-
-export default function Home() {
-  const { state, startDebate, reset } = useDebate();
-
-  return (
-    <main>
-      {state.status === 'idle' && (
-        <>
-          <TopicInput onSubmit={startDebate} isDisabled={false} />
-          <PresetButtons onSelect={startDebate} isDisabled={false} />
-        </>
-      )}
-
-      {(state.status === 'creating' || state.status === 'debating' || state.status === 'retiring' || state.status === 'spawning') && (
-        <DebateArena
-          agents={state.agents}
-          retiredAgents={state.retiredAgents}
-          messages={state.messages}
-          currentRound={state.currentRound}
-          activeAgentId={state.activeAgentId}
-          streamingText={state.streamingText}
-          status={state.status}
-        />
-      )}
-
-      {(state.status === 'finished' || state.status === 'generating_landing') && state.result && (
-        <ResultPanel
-          result={state.result}
-          agents={state.agents}
-          landingPageHtml={state.landingPageHtml}
-          isGeneratingLanding={state.status === 'generating_landing'}
-          onNewDebate={reset}
-        />
-      )}
-    </main>
-  );
-}
-```
-
-### 9.3 Git 전략
-
-```
-main (보호)
-├── feat/backend     ← P1
-├── feat/frontend-core  ← P2
-└── feat/frontend-result ← P3
-
-합치기: P2가 main에 먼저 머지 (레이아웃)
-     → P3가 main에 머지 (hook + 결과)
-     → P1이 main에 머지 (API)
-     → 통합 테스트
+P1: types.ts 완성 → P2, P3에 공유
+        ↓
+P2: 채팅 UI 모킹 개발 (더미 데이터)
+P3: 입력 UI + useDebate Hook 개발 (더미 SSE)
+        ↓
+P1: API 완성 → P3가 useDebate에 실제 API 연결
+        ↓
+P2 + P3 merge → 전체 플로우 테스트
+        ↓
+최종 조정 (애니메이션, 스타일링) → 배포
 ```
 
 ---
 
-## 10. Preset Demo Scenarios
+## 13. Preset Demo Scenarios
 
-심사위원이 바로 클릭할 수 있는 3개 프리셋:
-
-### Preset 1: 외국인 타겟 한국문화 아이템
-```
-예상 에이전트: PM(고정) vs 마케팅 전략가
-예상 퇴장: 마케팅 전략가 → 한류/팬덤 전문가 스포닝
-예상 결과: K-culture 관련 디지털 서비스
-```
-
-### Preset 2: 1인 SaaS 사업 아이디어
-```
-예상 에이전트: PM(고정) vs 테크 리드
-예상 퇴장: 테크 리드 → 특정 SaaS 도메인 전문가 스포닝
-예상 결과: 니치 SaaS 아이디어
-```
-
-### Preset 3: Z세대 소셜 플랫폼
-```
-예상 에이전트: PM(고정) vs UX 리서처
-예상 퇴장: UX 리서처 → Z세대 트렌드 분석가 스포닝
-예상 결과: 차세대 소셜 플랫폼 컨셉
-```
+| 프리셋 | 주제 | 예상 토론 방향 |
+|--------|------|---------------|
+| 한국문화 수출 | 외국인 타겟 한국문화 아이템 사업 | PM vs 마케터 → 팬덤 전문가 합류 |
+| 1인 SaaS | 혼자 만드는 B2B SaaS 아이디어 | PM vs 테크리드 → 세일즈 전문가 합류 |
+| Z세대 소셜 | Z세대를 위한 새로운 소셜 플랫폼 | PM vs UX리서처 → 커뮤니티 전문가 합류 |
 
 ---
 
-## 11. Risk & Mitigation
+## 14. Risk & Mitigation
 
-| 리스크 | 확률 | 대응 |
-|--------|------|------|
-| OpenAI API 속도 느림 | 중간 | 스트리밍으로 체감 속도 개선, 에이전트 발언 길이 제한 |
-| 토론이 발산만 함 | 중간 | PM 에이전트가 자연스럽게 브레이크 + Round 3 프롬프트에 강제 수렴 지시 |
-| 3.5시간 내 미완성 | 높음 | 최소 1개 프리셋이 완벽 작동하는 것 우선 |
-| 에이전트 성격 안 살아남 | 낮음 | 시스템 프롬프트에 구체적 성격 지시 |
-| SSE 파싱 오류 | 중간 | 단순한 이벤트 포맷 유지, 에러 핸들링 |
-| Git 머지 충돌 | 낮음 | 파일 단위 분리 철저 (겹치는 파일 없음) |
-| 퇴장 타이밍 부자연스러움 | 중간 | 스포닝 프롬프트에 퇴장 메시지 자연스럽게 지시 |
+| 리스크 | 심각도 | 대응 |
+|--------|--------|------|
+| OpenAI API 느림 | 높음 | SSE 스트리밍으로 체감 속도 개선, 타이핑 인디케이터 |
+| 토론 주제 벗어남 | 중간 | PM 시스템 프롬프트 + 오케스트레이터 체크 |
+| 랜딩페이지 HTML 품질 불균일 | 중간 | 상세한 프롬프트 + fallback 템플릿 |
+| 생성된 HTML에 악성 스크립트 | 높음 | sandbox iframe으로 DOM 격리 |
+| 페이지 전환 시 깜빡임 | 중간 | Framer Motion + HTML 프리로드 |
+| 3.5시간 내 미완성 | 높음 | P0만 집중, P1/P2 순서로 빌드 |
+| Git merge 충돌 | 중간 | 파일 단위 역할 분리, 타입 파일 먼저 확정 |
 
 ---
 
-## 12. MVP Definition (시간 부족 시 컷라인)
+## 15. MVP Definition
 
-### Must Have (이거 없으면 데모 불가)
-- [ ] 주제 입력 → PM(고정) + Agent 2 생성
-- [ ] 2개 에이전트 토론 (최소 2라운드)
-- [ ] 실시간 스트리밍
-- [ ] 최종 결과 카드
-- [ ] 프리셋 1개
+| 구분 | 항목 |
+|------|------|
+| **Must Have (P0)** | 주제 입력 → 에이전트 생성 → 2라운드 이상 토론 → 랜딩페이지 생성 + 페이지 전환 + 프리셋 1개 |
+| **Should Have (P1)** | 에이전트 퇴장/스포닝, 3라운드, 사이드바 에이전트 상태, 타이핑 인디케이터, 반응형, 프리셋 3개 |
+| **Nice to Have (P2)** | 전환 고급 애니메이션, 채널명 자동 생성, 랜딩페이지 스크롤 애니메이션 |
 
-### Should Have (있으면 훨씬 좋음)
-- [ ] Agent 2 퇴장 + 새 전문가 에이전트 스포닝
-- [ ] 퇴장 애니메이션 + 스포닝 애니메이션
-- [ ] Round 3 (PM + 새 에이전트 수렴)
-- [ ] 프리셋 3개
-- [ ] 랜딩페이지 자동 생성 + iframe 미리보기
+---
 
-### Nice to Have (시간 남으면)
-- [ ] 토론 하이라이트 타임라인
-- [ ] 에이전트 카드 상세 애니메이션
-- [ ] 결과 공유 기능
+## 16. Success Metrics
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| 1차 AI 심사 통과 | 10팀 내 선별 | 프론트엔드 코드 품질 |
+| 토론 완료율 | 90% | 에러 없이 랜딩페이지까지 도달 |
+| 전체 플로우 시간 | < 90초 | 입력 → 랜딩페이지 표시 |
+| 데모 임팩트 | "채팅 → 웹페이지 전환" wow factor | 3차 사람 심사 |
