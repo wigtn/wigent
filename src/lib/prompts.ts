@@ -267,42 +267,114 @@ export function landingPagePrompt(
   },
   debateSummary: string,
 ): string {
-  return `Generate a production-quality dark-theme landing page HTML for a startup product. This is a design prototype with placeholder demo data.
+  return `You are a world-class web designer. Build a complete, production-quality landing page as a single HTML file. This is a design prototype with placeholder demo content.
 
-Product info:
+PRODUCT:
 - Name: ${idea.title}
 - Tagline: ${idea.oneLiner}
 - Target: ${idea.target}
-- Revenue: ${idea.revenueModel}
-- Differentiator: ${idea.differentiator}
-- Market: ${idea.marketSize}
-- Context from team discussion: ${debateSummary.slice(0, 800)}
+- Revenue model: ${idea.revenueModel}
+- Key differentiator: ${idea.differentiator}
+- Market size: ${idea.marketSize}
+- Background context: ${debateSummary.slice(0, 600)}
 
-Design rules:
-- Single complete HTML file with inline CSS and minimal JS
-- Dark theme: bg #0a0a0a, text #fafafa, accent color matching the product
-- Modern design: glassmorphism cards, gradient hero text, smooth animations
-- Font: system font stack, hero 56px+ bold, body 18px line-height 1.8
-- Cards: rgba(255,255,255,0.03) bg, subtle border, blur backdrop, hover lift
-- CTA buttons: accent bg, glow on hover, border-radius 12px
-- NEVER use emoji characters anywhere in the page. Use SVG icons or CSS shapes instead.
-- Each section must have substantial content: at least 3-4 sentences of description, not just one-liner bullet points.
+ALL TEXT CONTENT MUST BE IN KOREAN.
 
-Sections (all text in Korean, rich content in each):
-1. Sticky nav (text logo + 4 nav links + CTA button, backdrop blur on scroll)
-2. Hero (small badge pill text + large gradient title 2-3 lines + 2 paragraph subtitle explaining the product in detail + 2 CTA buttons + 3 trust indicators as text)
-3. Problem section (section title + intro paragraph explaining the problem space + 3 problem cards, each with: CSS icon/shape, bold title, 3-4 sentence description with specific statistics)
-4. Solution section (section title + intro paragraph + 3-4 feature cards, each with: CSS icon, feature name, detailed 3-4 sentence description explaining how it works)
-5. How it works (3 numbered steps with connecting lines in CSS, each step has title + 2-3 sentence description)
-6. Metrics (4 big numbers with labels, use accent color gradient on numbers)
-7. Pricing (3 tier cards with plan name, price, feature checklist of 5+ items each, recommended plan highlighted)
-8. Testimonials (3 quote cards with name + title + company + 2-3 sentence quote - all placeholder demo data)
-9. Final CTA (full-width gradient background + compelling headline + subtitle + email input + button + small disclaimer text)
-10. Footer (4-column layout: Product, Resources, Company, Legal with 4+ links each + bottom copyright)
+CRITICAL DESIGN RULES:
+- ZERO emoji anywhere. Every icon must be an inline <svg> element with actual paths (e.g. chart icon, shield icon, lightning icon, users icon, etc). Empty divs or circles are not acceptable.
+- Every card, every section must have RICH text content. A card with only 1 sentence is unacceptable. Minimum 3 sentences per card description.
+- Section spacing: padding 100px 0 minimum. Generous whitespace everywhere.
+- CSS custom properties: --accent, --accent-light, --bg, --bg-card, --text, --text-dim
+- accent color: pick one that matches the product theme (blue for tech, green for eco, purple for creative, etc)
 
-Animations: Intersection Observer fade-in-up on scroll, staggered card reveals, number count-up animation for metrics.
-Responsive at 768px and 480px breakpoints.
-Use CSS custom properties for colors.
-Minimum 10,000 characters of HTML code. Each section must be thorough and detailed.
-Output ONLY the HTML starting with <!DOCTYPE html>. No markdown fences.`;
+LAYOUT & STYLE:
+- Font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
+- Dark bg: #050505 body, #0a0a0a sections, #111 cards
+- Text: #fafafa headings, #b0b0b0 body, #666 captions
+- Hero title: 60px+, font-weight 800, letter-spacing -0.02em, key words wrapped in <span> with gradient background-clip
+- Body text: 18px, line-height 1.8, max-width 700px centered
+- Glass cards: background rgba(255,255,255,0.04), border 1px solid rgba(255,255,255,0.08), border-radius 16px, padding 36px, backdrop-filter blur(16px)
+- Card hover: border-color rgba(accent,0.3), transform translateY(-4px), transition 0.3s
+- Primary CTA: accent bg, white text, padding 16px 36px, border-radius 12px, font-weight 600, hover box-shadow 0 0 40px accent/40%
+- Secondary CTA: transparent bg, border 1px solid rgba(255,255,255,0.15), hover bg rgba(255,255,255,0.05)
+
+SECTIONS (10 total, each with substantial content):
+
+1. NAV - sticky, backdrop-filter blur(12px), bg rgba(5,5,5,0.85), border-bottom 1px rgba(255,255,255,0.06)
+   - Left: text logo (product name, bold, accent dot after name)
+   - Right: 4 anchor links + primary CTA button "무료 시작"
+
+2. HERO - center aligned, min-height 90vh, subtle radial-gradient glow behind (accent at 5% opacity)
+   - Small pill badge at top: border 1px solid accent/30%, rounded-full, small text
+   - Title: 2-3 lines, 60px+, the most important keyword in gradient <span>
+   - Subtitle: 2 paragraphs (4+ sentences total) explaining what the product does, who it's for, and why it matters. Be specific and compelling.
+   - 2 buttons side by side (primary + secondary)
+   - Below buttons: 3 trust indicators in a row ("✓ 텍스트" format using checkmark character, not emoji)
+
+3. SOCIAL PROOF BAR - border-top/bottom 1px subtle, padding 40px
+   - "신뢰받는 팀들의 선택" centered text
+   - 6 placeholder company names in a row, opacity 0.3, font-weight 600, letter-spacing wide
+
+4. PROBLEM - why this product needs to exist
+   - Section label (small, uppercase, accent color, letter-spacing 0.15em)
+   - Big section title (36px)
+   - Intro paragraph (3 sentences about the problem space with a specific stat)
+   - 3 cards in a row, each with:
+     * SVG icon (24x24, stroke style, accent color) — use actual svg paths like: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="..."/></svg>
+     * Bold title
+     * 3-4 sentence description with specific numbers/percentages
+   - Cards should describe real pain points the target audience faces
+
+5. SOLUTION - how the product solves those problems
+   - Same label/title pattern
+   - Intro paragraph (3 sentences)
+   - 3-4 feature cards, each with:
+     * Different SVG icon (24x24 stroke style)
+     * Feature name (bold)
+     * 4-5 sentence detailed description: what it does, how it works technically, what benefit the user gets, a concrete example
+   - This is the most important section. Each card must be a mini-essay, not a tagline.
+
+6. HOW IT WORKS - 3-step process
+   - 3 steps in a horizontal row (vertical on mobile)
+   - Each step: large number (48px, accent gradient), title, 2-3 sentence description
+   - CSS connecting line between steps (a thin line or arrow using ::after pseudo-elements)
+
+7. METRICS - impressive numbers
+   - 4 metrics in a row
+   - Each: big number (56px, accent gradient, font-weight 800) + label below
+   - Numbers should use the count-up animation in JS (Intersection Observer triggers, animates from 0 to target)
+   - Use realistic numbers from the product info (market size, growth rate, price, user count)
+
+8. PRICING - 3 tiers
+   - 3 cards side by side
+   - Middle card is "recommended": accent border, "인기" badge, slightly larger
+   - Each card: plan name, price (/월), 6+ feature items with "✓" prefix
+   - Bottom of each card: CTA button (primary for recommended, secondary for others)
+
+9. TESTIMONIALS - social proof quotes
+   - 3 cards in a row
+   - Each: large quotation mark (accent color, 48px, font-family serif), 2-3 sentence quote, dash + name + title + company
+   - All content is placeholder demo data
+
+10. FINAL CTA - full width, background gradient or glass effect
+    - Big compelling headline (32px)
+    - Subtitle paragraph
+    - Email input + submit button inline (styled to match theme)
+    - Small disclaimer text below
+
+11. FOOTER - bg #080808, border-top 1px subtle
+    - 4 columns: 제품(5 links), 리소스(4 links), 회사(4 links), 법적(4 links)
+    - Bottom: copyright text + "Twitter · GitHub · LinkedIn" text links
+    - All links are # placeholder
+
+JAVASCRIPT (inside <script> at end of body):
+1. Intersection Observer: all .section elements and cards get fade-in-up (opacity 0→1, translateY 30→0). Cards within a section stagger by 100ms each.
+2. Number count-up: metrics numbers animate from 0 to target value over 2 seconds when they enter viewport. Parse the target from a data-target attribute.
+3. Navbar: on scroll, add a class that increases backdrop-filter blur.
+
+RESPONSIVE:
+- 768px: stack cards vertically, reduce hero title to 40px, reduce section padding to 60px
+- 480px: further reduce title to 32px, single column everything, reduce card padding to 24px
+
+Output ONLY the raw HTML starting with <!DOCTYPE html>. No markdown code fences. No explanation text.`;
 }
