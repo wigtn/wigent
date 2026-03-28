@@ -12,6 +12,7 @@ import type {
   DebateRound,
   DebateResult,
 } from "@/lib/types";
+import { renderLandingPage } from "@/lib/landing-templates";
 
 // ── Initial State ──
 
@@ -203,25 +204,32 @@ function reducer(state: DebateState, action: Action): DebateState {
         ],
       };
 
-    case "FINAL_RESULT":
+    case "FINAL_RESULT": {
+      // 템플릿 기반 즉시 렌더링 — GPT-4o HTML 생성 불필요
+      const html = renderLandingPage(action.result.idea);
       return {
         ...state,
-        status: "generating_landing",
+        status: "landing",
         result: action.result,
+        landingPageHtml: html,
         chatItems: [
           ...state.chatItems,
           systemMsg("debate_complete", "토론이 완료되었습니다"),
-          systemMsg("generating", "아이디어를 웹페이지로 만들고 있어요..."),
         ],
       };
+    }
 
     case "LANDING_PAGE_CHUNK":
+      // 템플릿으로 이미 렌더링된 경우 무시
+      if (state.status === "landing") return state;
       return {
         ...state,
         landingPageHtml: (state.landingPageHtml ?? "") + action.chunk,
       };
 
     case "LANDING_PAGE_READY":
+      // 템플릿으로 이미 렌더링된 경우 무시
+      if (state.status === "landing") return state;
       return {
         ...state,
         status: "landing",
