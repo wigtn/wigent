@@ -143,7 +143,7 @@ async function* streamSpeak(
 function pickNextSpeaker(
   agents: Agent[],
   messages: AgentMessage[],
-  turnCount: number,
+  _turnCount: number,
 ): string {
   const online = agents.filter((a) => a.status === "online");
   if (online.length === 0) return agents[0].id;

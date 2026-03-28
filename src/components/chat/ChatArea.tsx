@@ -1,13 +1,47 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-import type { ChatItem, Agent } from "@/lib/types";
+import type { ChatItem, Agent, AgentMessage } from "@/lib/types";
 import ChatMessage from "./ChatMessage";
 import SystemMessage from "./SystemMessage";
 import TypingIndicator from "./TypingIndicator";
 import DisabledInput from "./DisabledInput";
 import ChannelHeader from "./ChannelHeader";
+
+/** Streaming 중인 메시지를 별도 컴포넌트로 분리하여 Date.now()를 렌더 밖에서 처리 */
+function StreamingMessage({
+  activeAgentId,
+  currentRound,
+  activeAgent,
+  streamingText,
+}: {
+  activeAgentId: string;
+  currentRound: number;
+  activeAgent: Agent;
+  streamingText: string;
+}) {
+  const placeholder = useMemo<AgentMessage>(
+    () => ({
+      id: "streaming",
+      agentId: activeAgentId,
+      content: "",
+      round: currentRound,
+      timestamp: 0,
+    }),
+    [activeAgentId, currentRound],
+  );
+
+  return (
+    <ChatMessage
+      key={`streaming-${activeAgentId}`}
+      message={placeholder}
+      agent={activeAgent}
+      isStreaming
+      streamingText={streamingText}
+    />
+  );
+}
 
 interface ChatAreaProps {
   channelName: string;
@@ -90,17 +124,10 @@ export default function ChatArea({
 
         {/* Streaming message (실시간 텍스트 표시) */}
         {activeAgent && streamingText.length > 0 && (
-          <ChatMessage
-            key={`streaming-${activeAgentId}`}
-            message={{
-              id: "streaming",
-              agentId: activeAgentId!,
-              content: "",
-              round: currentRound,
-              timestamp: Date.now(),
-            }}
-            agent={activeAgent}
-            isStreaming
+          <StreamingMessage
+            activeAgentId={activeAgentId!}
+            currentRound={currentRound}
+            activeAgent={activeAgent}
             streamingText={streamingText}
           />
         )}

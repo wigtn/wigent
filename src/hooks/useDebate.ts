@@ -3,7 +3,6 @@
 import { useReducer, useCallback, useRef } from "react";
 import type {
   DebateState,
-  DebateStatus,
   SSEEventType,
   Agent,
   AgentMessage,
