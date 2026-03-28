@@ -131,35 +131,88 @@ export default function Home() {
         {currentView === "idle" && (
           <motion.div
             key="idle"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className="h-full overflow-y-auto"
+            transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+            className="h-full overflow-y-auto hero-bg"
           >
-            <div className="relative flex flex-col items-center justify-center min-h-full px-4 py-12">
-              {/* Background glow */}
-              <div className="glow-orb" />
+            <div className="noise-overlay" />
+            <div className="relative flex flex-col items-center justify-center min-h-full px-4 py-20">
+              {/* Floating orbs */}
+              <div className="orb-1 -top-20 -right-20" />
+              <div className="orb-2 bottom-10 -left-20" />
 
-              <div className="relative z-10 flex flex-col items-center w-full">
-                <div className="text-5xl sm:text-6xl mb-4 select-none">
-                  ⚔️
-                </div>
-                <h1 className="text-5xl sm:text-6xl font-extrabold gradient-text mb-3 tracking-tight text-center">
+              <div className="relative z-10 flex flex-col items-center w-full max-w-2xl">
+                {/* Badge */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.5 }}
+                  className="flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-4 py-1.5 mb-8"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500" />
+                  </span>
+                  <span className="text-xs font-medium text-indigo-300/90 tracking-wide">AI 에이전트 토론 플랫폼</span>
+                </motion.div>
+
+                {/* Title */}
+                <motion.h1
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="text-5xl sm:text-6xl lg:text-7xl font-extrabold gradient-text mb-5 tracking-tight text-center leading-[1.1]"
+                >
                   Wigent
-                </h1>
-                <p className="text-[var(--text-muted)] mb-10 text-center text-base sm:text-lg max-w-md leading-relaxed">
-                  AI 에이전트들이 토론하고,
+                </motion.h1>
+
+                {/* Description */}
+                <motion.p
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  className="text-[var(--text-secondary)] mb-12 text-center text-base sm:text-lg max-w-md leading-relaxed"
+                >
+                  주제를 입력하면 AI 에이전트들이 토론하고,
                   <br />
-                  아이디어를 웹페이지로 만들어 드립니다
-                </p>
-                <TopicInput onSubmit={startDebate} isDisabled={false} />
-                <PresetButtons onSelect={startDebate} isDisabled={false} />
-                <HistoryList
-                  entries={entries}
-                  onSelect={handleHistorySelect}
-                  onDelete={remove}
-                />
+                  <span className="text-[var(--text-primary)]">아이디어를 랜딩페이지로</span> 만들어 드립니다
+                </motion.p>
+
+                {/* Input */}
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  className="w-full"
+                >
+                  <TopicInput onSubmit={startDebate} isDisabled={false} />
+                </motion.div>
+
+                {/* Presets */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  className="w-full"
+                >
+                  <PresetButtons onSelect={startDebate} isDisabled={false} />
+                </motion.div>
+
+                {/* History */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                  className="w-full"
+                >
+                  <HistoryList
+                    entries={entries}
+                    onSelect={handleHistorySelect}
+                    onDelete={remove}
+                  />
+                </motion.div>
               </div>
             </div>
           </motion.div>
@@ -187,26 +240,21 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ duration: 0.4 }}
-            className="flex flex-col items-center justify-center h-full px-4 gap-6"
+            className="flex flex-col items-center justify-center h-full px-4 gap-8 hero-bg"
           >
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full border-[3px] border-[#383a3e] border-t-[#1264a3] animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center text-2xl">
-                ⚔️
-              </div>
+            <div className="relative w-16 h-16">
+              <div className="absolute inset-0 rounded-full border-2 border-[#1e1f23]" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-indigo-500 border-r-purple-500/50 animate-spin" />
+              <div className="absolute inset-[6px] rounded-full border border-[#1e1f23]" />
+              <div className="absolute inset-[6px] rounded-full border border-transparent border-b-indigo-400/50 animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
             </div>
-            <div className="text-center">
-              <h2 className="text-xl font-bold gradient-text mb-2">
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-bold gradient-text">
                 아이디어를 디자인하고 있어요
               </h2>
-              <p className="text-sm text-[var(--text-muted)]">
+              <p className="text-sm text-[#4a4b52]">
                 토론 결과를 바탕으로 랜딩페이지를 생성 중입니다
               </p>
-            </div>
-            <div className="flex gap-1.5 mt-2">
-              <span className="w-2 h-2 rounded-full bg-[#1264a3] animate-bounce" style={{ animationDelay: "0ms" }} />
-              <span className="w-2 h-2 rounded-full bg-[#1264a3] animate-bounce" style={{ animationDelay: "150ms" }} />
-              <span className="w-2 h-2 rounded-full bg-[#1264a3] animate-bounce" style={{ animationDelay: "300ms" }} />
             </div>
           </motion.div>
         )}
@@ -301,7 +349,7 @@ export default function Home() {
             <p className="text-red-400 text-lg">{state.error}</p>
             <button
               onClick={handleNewDebate}
-              className="rounded-lg bg-[#1264a3] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#1574b8] transition-colors"
+              className="rounded-xl bg-indigo-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-indigo-400 transition-colors"
             >
               새 토론 시작
             </button>

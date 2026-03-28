@@ -24,15 +24,15 @@ export function HistoryList({ entries, onSelect, onDelete }: HistoryListProps) {
   if (entries.length === 0) return null;
 
   return (
-    <div className="w-full max-w-2xl mx-auto mt-10">
-      <div className="flex items-center gap-3 mb-3 px-2">
-        <div className="flex-1 h-px bg-[var(--divider)]" />
-        <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+    <div className="w-full max-w-xl mx-auto mt-14">
+      <div className="flex items-center gap-3 mb-4 px-1">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#232429] to-transparent" />
+        <span className="text-[11px] font-semibold text-[#4a4b52] uppercase tracking-[0.15em]">
           이전 토론
         </span>
-        <div className="flex-1 h-px bg-[var(--divider)]" />
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#232429] to-transparent" />
       </div>
-      <div className="space-y-0.5">
+      <div className="space-y-1">
         <AnimatePresence>
           {entries.map((entry) => (
             <motion.button
@@ -42,20 +42,24 @@ export function HistoryList({ entries, onSelect, onDelete }: HistoryListProps) {
               exit={{ opacity: 0, x: -80 }}
               transition={{ duration: 0.2 }}
               onClick={() => onSelect(entry)}
-              className="group flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg hover:bg-[var(--bg-chat-hover)] transition-colors cursor-pointer"
+              className="card-shine group flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl hover:bg-[#1c1d22] transition-all duration-200 cursor-pointer"
             >
-              <span className="text-base shrink-0">💬</span>
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/8 border border-indigo-500/10 flex items-center justify-center shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-[var(--text-primary)] truncate">
                   {entry.topic}
                 </p>
                 {entry.result?.idea?.title && (
-                  <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">
-                    → {entry.result.idea.title}
+                  <p className="text-xs text-[#4a4b52] truncate mt-0.5">
+                    {entry.result.idea.title}
                   </p>
                 )}
               </div>
-              <span className="text-xs text-[var(--text-muted)] shrink-0">
+              <span className="text-[11px] text-[#3a3b42] shrink-0 font-mono">
                 {timeAgo(entry.timestamp)}
               </span>
               <span
@@ -71,7 +75,7 @@ export function HistoryList({ entries, onSelect, onDelete }: HistoryListProps) {
                     onDelete(entry.id);
                   }
                 }}
-                className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-[var(--bg-surface)] transition-all text-[var(--text-muted)] hover:text-red-400"
+                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-500/10 transition-all text-[#4a4b52] hover:text-red-400"
                 aria-label="삭제"
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
