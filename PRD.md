@@ -1,6 +1,6 @@
 # Agent Arena PRD
 
-> **Version**: 1.1
+> **Version**: 1.2
 > **Created**: 2026-03-27
 > **Updated**: 2026-03-28
 > **Status**: Draft
@@ -29,7 +29,6 @@
 ### 1.4 Non-Goals (Out of Scope)
 
 - 사용자가 토론에 직접 참여하는 기능 (v2)
-- 결과물 랜딩페이지 자동 생성 (시간 부족)
 - 에이전트 커스터마이징 (v2)
 - 로그인/저장 기능
 
@@ -192,7 +191,15 @@ Round 3: PM + 팬덤 전문가 (2명으로 수렴)
 │  - 아이디어명, 타겟, 수익모델, 차별점            │
 │  - 시장 규모, 다음 단계                          │
 │  - 토론 하이라이트 타임라인                      │
-│  - [새 토론 시작] 버튼                           │
+│                                                  │
+└──────────────────┬───────────────────────────────┘
+                   ▼
+┌─ STEP 8: 랜딩페이지 자동 생성 ────────────────┐
+│                                                  │
+│  "이 아이디어의 랜딩페이지를 생성중..." 표시     │
+│  → GPT-4o가 FinalIdea 기반으로 HTML 생성         │
+│  → 완성된 랜딩페이지를 iframe으로 미리보기       │
+│  → [새 토론 시작] 버튼                           │
 │                                                  │
 └─────────────────────────────────────────────────┘
 ```
@@ -250,7 +257,8 @@ agent-arena/
 │   │   ├── RoundBanner.tsx            [P2]
 │   │   ├── ResultPanel.tsx            [P3]
 │   │   ├── IdeaCard.tsx               [P3]
-│   │   └── DebateHighlights.tsx       [P3]
+│   │   ├── DebateHighlights.tsx       [P3]
+│   │   └── LandingPagePreview.tsx     [P3]
 │   ├── hooks/
 │   │   └── useDebate.ts              [P3]
 │   └── lib/
@@ -319,12 +327,13 @@ export interface DebateResult {
 
 // ── Debate State (Frontend) ──
 export type DebateStatus =
-  | 'idle'           // 초기 입력 대기
-  | 'creating'       // 에이전트 생성 중
-  | 'debating'       // 토론 진행 중
-  | 'retiring'       // 에이전트 퇴장 중
-  | 'spawning'       // 새 에이전트 스포닝 중
-  | 'finished'       // 토론 완료, 결과 표시
+  | 'idle'              // 초기 입력 대기
+  | 'creating'          // 에이전트 생성 중
+  | 'debating'          // 토론 진행 중
+  | 'retiring'          // 에이전트 퇴장 중
+  | 'spawning'          // 새 에이전트 스포닝 중
+  | 'generating_landing' // 랜딩페이지 생성 중
+  | 'finished'          // 토론 완료, 결과 + 랜딩페이지 표시
   | 'error';
 
 export interface DebateState {
@@ -338,6 +347,7 @@ export interface DebateState {
   activeAgentId: string | null;   // 현재 발언 중인 에이전트
   streamingText: string;          // 현재 스트리밍 중인 텍스트
   result: DebateResult | null;
+  landingPageHtml: string | null; // 생성된 랜딩페이지 HTML
   error: string | null;
 }
 
@@ -352,6 +362,7 @@ export type SSEEventType =
   | 'spawn_trigger'
   | 'agent_spawned'
   | 'final_result'
+  | 'landing_page_ready'
   | 'debate_end'
   | 'error';
 
@@ -397,6 +408,10 @@ export interface FinalResultEvent {
   result: DebateResult;
 }
 
+export interface LandingPageReadyEvent {
+  html: string;     // 완성된 랜딩페이지 HTML (인라인 CSS 포함)
+}
+
 export interface DebateEndEvent {
   totalRounds: number;
   totalAgents: number;
@@ -435,7 +450,8 @@ export interface DebateEndEvent {
 12. round_start       → { round: 3, title: "최종 수렴" }
 13. (PM + 새 에이전트 발언)
 14. final_result      → DebateResult
-15. debate_end        → { totalRounds, totalAgents, totalMessages }
+15. landing_page_ready → { html } (FinalIdea 기반 랜딩페이지)
+16. debate_end        → { totalRounds, totalAgents, totalMessages }
 ```
 
 **Error Event:**
@@ -478,7 +494,12 @@ async function* runDebate(topic: string): AsyncGenerator<SSEEvent>
 6. generateFinalResult(agents, messages)
    → GPT-4o 1회: 전체 토론 요약 → FinalIdea 생성
    → yield final_result
-   → yield debate_end
+
+7. generateLandingPage(finalIdea)
+   → GPT-4o 1회: FinalIdea 기반 랜딩페이지 HTML 생성
+   → yield landing_page_ready
+
+8. yield debate_end
 ```
 
 **총 GPT-4o 호출:**
@@ -488,7 +509,8 @@ async function* runDebate(topic: string): AsyncGenerator<SSEEvent>
 - 퇴장/스포닝 분석: 1회
 - Round 3: 2회 (PM, 새 에이전트)
 - 최종 결과: 1회
-- **총 9회** (스트리밍이라 체감 빠름, 예상 총 시간 40~55초)
+- 랜딩페이지 생성: 1회
+- **총 10회** (스트리밍이라 체감 빠름, 예상 총 시간 45~65초)
 
 ### 6.6 System Prompts (`src/lib/prompts.ts`)
 
@@ -649,6 +671,32 @@ PM은 이미 고정되어 있습니다:
 }
 ```
 
+#### 오케스트레이터: 랜딩페이지 생성
+
+```
+아래 아이디어를 기반으로 멋진 랜딩페이지 HTML을 생성하세요.
+
+아이디어:
+- 제목: {idea.title}
+- 한 줄 설명: {idea.oneLiner}
+- 타겟: {idea.target}
+- 수익모델: {idea.revenueModel}
+- 차별점: {idea.differentiator}
+- 시장규모: {idea.marketSize}
+- 다음 단계: {idea.nextSteps}
+
+규칙:
+- 완전한 단일 HTML 파일 (인라인 CSS, 외부 의존성 없음)
+- 다크 테마 (배경 #0a0a0a, 텍스트 #fafafa)
+- 모던 디자인 (그라디언트, 글래스모피즘)
+- 섹션: Hero (제목 + 한줄 설명 + CTA) → Features (차별점) → Target → Revenue → CTA
+- 반응형 (모바일 대응)
+- 한국어
+- <html>, <head>, <body> 태그 포함한 완전한 HTML
+- JavaScript 없이 순수 HTML + CSS만
+- 응답은 HTML 코드만 (```html 태그 없이 순수 HTML)
+```
+
 ---
 
 ## 7. UI/UX Design
@@ -789,6 +837,22 @@ PM은 이미 고정되어 있습니다:
 │  │                                                 │ │
 │  └─────────────────────────────────────────────────┘ │
 │                                                      │
+│  ┌─ 랜딩페이지 미리보기 ─────────────────────────┐ │
+│  │                                                 │ │
+│  │  ┌───────────────────────────────────────────┐ │ │
+│  │  │  (iframe - srcdoc)                         │ │ │
+│  │  │                                            │ │ │
+│  │  │  ✨ AI 팬아트 크리에이터                │ │ │
+│  │  │  K-pop 팬이 저작권 걱정 없이...            │ │ │
+│  │  │                                            │ │ │
+│  │  │  [시작하기]                                 │ │ │
+│  │  │                                            │ │ │
+│  │  └───────────────────────────────────────────┘ │ │
+│  │                                                 │ │
+│  │  이 아이디어의 랜딩페이지가 자동 생성되었습니다 │ │
+│  │                                                 │ │
+│  └─────────────────────────────────────────────────┘ │
+│                                                      │
 │         [🔄 새 토론 시작]                            │
 │                                                      │
 └─────────────────────────────────────────────────────┘
@@ -806,6 +870,7 @@ PM은 이미 고정되어 있습니다:
 | 스트리밍 텍스트 | 타이핑 커서 깜빡임 | CSS animation |
 | 라운드 전환 | 배너 slideDown + 컬러 전환 | framer-motion |
 | 결과 카드 | staggered fadeIn (항목별 순차) | framer-motion |
+| 랜딩페이지 로딩 | 스켈레톤 shimmer → fadeIn | framer-motion |
 | 에이전트 발언 중 표시 | 점 3개 펄스 애니메이션 | CSS animation |
 
 ---
@@ -847,8 +912,8 @@ PM은 이미 고정되어 있습니다:
 - `src/app/api/debate/route.ts` — SSE 스트리밍 API
 
 **핵심 산출물:**
-- `POST /api/debate` 엔드포인트가 SSE로 토론 전체를 스트리밍
-- PM(고정) + Agent 2 생성 → 라운드별 발언 → 퇴장 → 스포닝 → 결과 순서로 이벤트 전송
+- `POST /api/debate` 엔드포인트가 SSE로 토론 + 랜딩페이지를 스트리밍
+- PM(고정) + Agent 2 생성 → 라운드별 발언 → 퇴장 → 스포닝 → 결과 → 랜딩페이지 순서
 
 **의존성:**
 - OpenAI API key (`OPENAI_API_KEY`)
@@ -936,9 +1001,10 @@ const mockMessages: AgentMessage[] = [
 - `src/hooks/useDebate.ts` — SSE 연결 + 이벤트 파싱 + DebateState 관리
 - `src/components/TopicInput.tsx` — 주제 입력 폼
 - `src/components/PresetButtons.tsx` — 프리셋 주제 버튼들
-- `src/components/ResultPanel.tsx` — 결과 전체 컨테이너
+- `src/components/ResultPanel.tsx` — 결과 전체 컨테이너 (아이디어 + 하이라이트 + 랜딩페이지)
 - `src/components/IdeaCard.tsx` — 최종 아이디어 카드
 - `src/components/DebateHighlights.tsx` — 토론 하이라이트 타임라인
+- `src/components/LandingPagePreview.tsx` — 랜딩페이지 iframe 미리보기
 
 **useDebate Hook 인터페이스:**
 ```typescript
@@ -970,7 +1036,8 @@ const startDebate = async (topic: string) => {
     const text = decoder.decode(value);
     // SSE 포맷 파싱: "event: xxx\ndata: {...}\n\n"
     // → 이벤트 타입별 state 업데이트
-    // → agent_retire 이벤트 시: retiredAgents에 추가, agents에서 제거
+    // → agent_retire: retiredAgents에 추가, agents에서 제거
+    // → landing_page_ready: landingPageHtml에 저장
   }
 };
 ```
@@ -1002,8 +1069,20 @@ const PRESETS = [
 interface ResultPanelProps {
   result: DebateResult;
   agents: Agent[];
+  landingPageHtml: string | null;
+  isGeneratingLanding: boolean;
   onNewDebate: () => void;
 }
+```
+
+**LandingPagePreview Props:**
+```typescript
+interface LandingPagePreviewProps {
+  html: string;
+}
+// → iframe srcdoc로 렌더링
+// → sandbox="allow-same-origin" (보안: 스크립트 차단)
+// → 높이 600px, 너비 100%, rounded border
 ```
 
 ---
@@ -1058,10 +1137,12 @@ export default function Home() {
         />
       )}
 
-      {state.status === 'finished' && state.result && (
+      {(state.status === 'finished' || state.status === 'generating_landing') && state.result && (
         <ResultPanel
           result={state.result}
           agents={state.agents}
+          landingPageHtml={state.landingPageHtml}
+          isGeneratingLanding={state.status === 'generating_landing'}
           onNewDebate={reset}
         />
       )}
@@ -1141,9 +1222,9 @@ main (보호)
 - [ ] 퇴장 애니메이션 + 스포닝 애니메이션
 - [ ] Round 3 (PM + 새 에이전트 수렴)
 - [ ] 프리셋 3개
+- [ ] 랜딩페이지 자동 생성 + iframe 미리보기
 
 ### Nice to Have (시간 남으면)
 - [ ] 토론 하이라이트 타임라인
 - [ ] 에이전트 카드 상세 애니메이션
 - [ ] 결과 공유 기능
-- [ ] 다크/라이트 테마 전환
