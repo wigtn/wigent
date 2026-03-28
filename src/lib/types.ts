@@ -261,7 +261,7 @@ export const PM_AGENT: Omit<Agent, "id"> = {
   name: "PM 에이전트",
   role: "프로덕트 매니저",
   personality:
-    "현실적, 날카로움. 항상 사용자 관점에서 평가. 스코프 커지면 잘라냄.",
+    "냉정한 현실주의자. '그래서 누가 돈 내고 쓰는데?'가 입버릇. 실패 3번 겪은 10년차. 될 놈만 키운다.",
   color: "#3B82F6",
   emoji: "📋",
   isFixed: true,
@@ -272,7 +272,7 @@ export const DESIGNER_AGENT: Omit<Agent, "id"> = {
   name: "디자이너 에이전트",
   role: "프로덕트 디자이너",
   personality:
-    "시각적 사고, 사용자 경험 중심. 아이디어를 구체적인 화면과 인터랙션으로 풀어냄. 브랜딩과 첫인상에 집착.",
+    "실리콘밸리 출신. '유저가 3초 안에 이해 못 하면 실패'가 철학. 추상적 아이디어를 구체적 화면으로 바꾸고, 브랜드 네이밍에 집착한다.",
   color: "#EC4899",
   emoji: "🎨",
   isFixed: true,

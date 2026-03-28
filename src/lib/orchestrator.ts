@@ -3,16 +3,36 @@ import type { Agent, AgentMessage, FinalIdea, SSEEvent } from "./types";
 import { PM_AGENT, DESIGNER_AGENT } from "./types";
 import {
   createAgentPrompt,
-  pmSpeakPrompt,
-  agentSpeakPrompt,
-  designerSpeakPrompt,
+  freeDebatePrompt,
   retireSpawnPrompt,
+  summarizeDebatePrompt,
   finalResultPrompt,
   landingPagePrompt,
 } from "./prompts";
 
-const CALL_TIMEOUT = 30_000;
+const SPEAK_TIMEOUT = 30_000;
+const LANDING_TIMEOUT = 180_000;
 const MAX_RETRIES = 1;
+const MAX_TURNS = 30;
+
+// 에이전트 교체 발생 턴 (확정적)
+const RETIRE_AT_TURN = 12;
+const RETIRE_AGAIN_AT_TURN = 22;
+
+// ── Logger ──
+const LOG_PREFIX = "[Arena]";
+
+function log(label: string, data?: unknown) {
+  const ts = new Date().toLocaleTimeString("ko-KR", { hour12: false });
+  if (data !== undefined) {
+    console.log(
+      `${LOG_PREFIX} ${ts} | ${label}`,
+      typeof data === "string" ? data : JSON.stringify(data, null, 2),
+    );
+  } else {
+    console.log(`${LOG_PREFIX} ${ts} | ${label}`);
+  }
+}
 
 function createOpenAI(): OpenAI {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -31,8 +51,7 @@ async function callJSON<T>(
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), CALL_TIMEOUT);
-
+      const timeout = setTimeout(() => controller.abort(), SPEAK_TIMEOUT);
       const merged = signal
         ? AbortSignal.any([signal, controller.signal])
         : controller.signal;
@@ -62,10 +81,9 @@ async function* streamSpeak(
   openai: OpenAI,
   systemPrompt: string,
   agentId: string,
-  round: number,
   signal?: AbortSignal,
 ): AsyncGenerator<SSEEvent> {
-  yield { type: "agent_speak_start", data: { agentId, round } };
+  yield { type: "agent_speak_start", data: { agentId, round: 0 } };
 
   let fullMessage = "";
   let lastError: unknown;
@@ -73,8 +91,7 @@ async function* streamSpeak(
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), CALL_TIMEOUT);
-
+      const timeout = setTimeout(() => controller.abort(), SPEAK_TIMEOUT);
       const merged = signal
         ? AbortSignal.any([signal, controller.signal])
         : controller.signal;
@@ -99,6 +116,7 @@ async function* streamSpeak(
         }
       }
 
+      log(`💬 [${agentId}] 발언 완료`, fullMessage);
       yield { type: "agent_speak_done", data: { agentId, fullMessage } };
       return;
     } catch (err) {
@@ -108,6 +126,99 @@ async function* streamSpeak(
     }
   }
   throw lastError;
+}
+
+// ── 다음 발언자 결정 (단순 로테이션 + 변형) ──
+
+function pickNextSpeaker(
+  agents: Agent[],
+  messages: AgentMessage[],
+  turnCount: number,
+): string {
+  const online = agents.filter((a) => a.status === "online");
+  if (online.length === 0) return agents[0].id;
+
+  // 마지막 발언자 제외하고 선택
+  const lastSpeakerId = messages.length > 0 ? messages[messages.length - 1].agentId : null;
+  const candidates = online.filter((a) => a.id !== lastSpeakerId);
+  if (candidates.length === 0) return online[0].id;
+
+  // 발언 횟수가 적은 에이전트 우선
+  const speakCounts = new Map<string, number>();
+  for (const a of online) speakCounts.set(a.id, 0);
+  for (const m of messages) {
+    const cur = speakCounts.get(m.agentId);
+    if (cur !== undefined) speakCounts.set(m.agentId, cur + 1);
+  }
+
+  candidates.sort((a, b) => (speakCounts.get(a.id) ?? 0) - (speakCounts.get(b.id) ?? 0));
+  return candidates[0].id;
+}
+
+// ── 에이전트 교체 실행 ──
+
+async function* doRetireSpawn(
+  openai: OpenAI,
+  topic: string,
+  pmAgent: Agent,
+  targetAgent: Agent,
+  allAgents: Agent[],
+  allMessages: AgentMessage[],
+  signal?: AbortSignal,
+): AsyncGenerator<SSEEvent> {
+  log("🔄 퇴장/스포닝 진행", targetAgent.name);
+
+  const retireSpawn = await callJSON<{
+    retire: { agentId: string; exitMessage: string };
+    spawn: {
+      reason: string;
+      agent: {
+        name: string;
+        role: string;
+        personality: string;
+        color: string;
+        emoji: string;
+      };
+    };
+  }>(
+    openai,
+    retireSpawnPrompt(topic, pmAgent, targetAgent, allMessages, allAgents),
+    signal,
+  );
+
+  // 퇴장
+  targetAgent.status = "offline";
+  yield {
+    type: "agent_retire",
+    data: {
+      agentId: targetAgent.id,
+      exitMessage: retireSpawn.retire.exitMessage,
+    },
+  };
+  log("👋 퇴장", {
+    agent: targetAgent.name,
+    exitMessage: retireSpawn.retire.exitMessage,
+  });
+
+  yield { type: "spawn_trigger", data: { reason: retireSpawn.spawn.reason } };
+
+  // 스포닝
+  const newAgent: Agent = {
+    id: genId(),
+    name: retireSpawn.spawn.agent.name,
+    role: retireSpawn.spawn.agent.role,
+    personality: retireSpawn.spawn.agent.personality,
+    color: retireSpawn.spawn.agent.color,
+    emoji: retireSpawn.spawn.agent.emoji,
+    status: "online",
+  };
+  allAgents.push(newAgent);
+  yield { type: "agent_spawned", data: { agent: newAgent } };
+  log("✨ 새 에이전트", {
+    name: newAgent.name,
+    role: newAgent.role,
+    reason: retireSpawn.spawn.reason,
+  });
 }
 
 const FALLBACK_HTML = (idea: FinalIdea) => `<!DOCTYPE html>
@@ -140,6 +251,7 @@ export async function* runDebate(
   const allAgents: Agent[] = [];
 
   // ── Step 1: Create Agents ──
+  log("🚀 토론 시작", { topic });
   const creation = await callJSON<{
     agent: {
       name: string;
@@ -149,7 +261,6 @@ export async function* runDebate(
       emoji: string;
     };
     channelName: string;
-    roundPlan: { round1: string; round2: string; round3: string };
   }>(openai, createAgentPrompt(topic), signal);
 
   const pmAgent: Agent = { id: genId(), ...PM_AGENT };
@@ -165,239 +276,120 @@ export async function* runDebate(
 
   allAgents.push(pmAgent, agent2);
 
+  log("🤖 에이전트 생성", {
+    pm: pmAgent.name,
+    agent2: `${agent2.name} (${agent2.role})`,
+    channel: creation.channelName,
+  });
+
   yield {
     type: "agents_created",
     data: { agents: [pmAgent, agent2], channelName: creation.channelName },
   };
 
-  const rounds = [
-    { number: 1, title: "브레인스토밍" },
-    { number: 2, title: "토론/반박" },
-    { number: 3, title: "최종 수렴" },
-  ];
+  // ── Step 2: Free Debate Loop ──
+  let turnCount = 0;
+  let retireCount = 0;
+  // 디자이너는 턴 3에서 합류
+  let designerJoined = false;
 
-  // ── Step 2: Round 1 ──
-  yield { type: "round_start", data: { round: 1, title: rounds[0].title } };
-
-  for await (const ev of streamSpeak(
-    openai,
-    pmSpeakPrompt(topic, rounds[0], allMessages, allAgents),
-    pmAgent.id,
-    1,
-    signal,
-  )) {
-    yield ev;
-    if (ev.type === "agent_speak_done") {
-      allMessages.push({
-        id: genId(),
-        agentId: pmAgent.id,
-        content: ev.data.fullMessage,
-        round: 1,
-        timestamp: Date.now(),
-      });
+  while (turnCount < MAX_TURNS) {
+    // ── 디자이너 합류 (턴 3) ──
+    if (turnCount === 3 && !designerJoined) {
+      const designerAgent: Agent = { id: genId(), ...DESIGNER_AGENT };
+      allAgents.push(designerAgent);
+      designerJoined = true;
+      log("🎨 디자이너 합류", designerAgent.name);
+      yield { type: "agent_spawned", data: { agent: designerAgent } };
     }
+
+    // ── 에이전트 교체 (턴 12, 22) ──
+    if (
+      (turnCount === RETIRE_AT_TURN || turnCount === RETIRE_AGAIN_AT_TURN) &&
+      retireCount < 2
+    ) {
+      // 교체 대상: isFixed가 아닌 온라인 에이전트 중 가장 오래된 에이전트
+      const target = allAgents.find(
+        (a) => a.status === "online" && !a.isFixed,
+      );
+      if (target) {
+        for await (const ev of doRetireSpawn(
+          openai,
+          topic,
+          pmAgent,
+          target,
+          allAgents,
+          allMessages,
+          signal,
+        )) {
+          yield ev;
+        }
+        retireCount++;
+      }
+    }
+
+    // ── 다음 발언자 선택 ──
+    const speakerId = pickNextSpeaker(allAgents, allMessages, turnCount);
+    const speaker = allAgents.find((a) => a.id === speakerId);
+    if (!speaker || speaker.status !== "online") {
+      turnCount++;
+      continue;
+    }
+
+    log(`🎤 턴 ${turnCount + 1}/${MAX_TURNS}: ${speaker.name} 발언`);
+
+    const prompt = freeDebatePrompt(
+      speaker,
+      topic,
+      allMessages,
+      allAgents,
+      turnCount,
+    );
+
+    for await (const ev of streamSpeak(openai, prompt, speaker.id, signal)) {
+      yield ev;
+      if (ev.type === "agent_speak_done") {
+        allMessages.push({
+          id: genId(),
+          agentId: speaker.id,
+          content: ev.data.fullMessage,
+          round: 0,
+          timestamp: Date.now(),
+        });
+      }
+    }
+
+    turnCount++;
   }
 
-  for await (const ev of streamSpeak(
+  // ── Step 3: Summarize ──
+  log("📝 토론 요약 중...");
+  const summary = await callJSON<{ summary: string }>(
     openai,
-    agentSpeakPrompt(agent2, topic, rounds[0], allMessages, allAgents),
-    agent2.id,
-    1,
+    summarizeDebatePrompt(topic, allAgents, allMessages),
     signal,
-  )) {
-    yield ev;
-    if (ev.type === "agent_speak_done") {
-      allMessages.push({
-        id: genId(),
-        agentId: agent2.id,
-        content: ev.data.fullMessage,
-        round: 1,
-        timestamp: Date.now(),
-      });
-    }
-  }
+  );
+  log("📝 토론 요약 완료", summary.summary);
 
-  // ── Step 3: Designer joins after brainstorming ──
-  const designerAgent: Agent = { id: genId(), ...DESIGNER_AGENT };
-  allAgents.push(designerAgent);
-  yield { type: "agent_spawned", data: { agent: designerAgent } };
-
-  // ── Step 4: Round 2 ──
-  yield { type: "round_start", data: { round: 2, title: rounds[1].title } };
-
-  for await (const ev of streamSpeak(
-    openai,
-    pmSpeakPrompt(topic, rounds[1], allMessages, allAgents),
-    pmAgent.id,
-    2,
-    signal,
-  )) {
-    yield ev;
-    if (ev.type === "agent_speak_done") {
-      allMessages.push({
-        id: genId(),
-        agentId: pmAgent.id,
-        content: ev.data.fullMessage,
-        round: 2,
-        timestamp: Date.now(),
-      });
-    }
-  }
-
-  for await (const ev of streamSpeak(
-    openai,
-    agentSpeakPrompt(agent2, topic, rounds[1], allMessages, allAgents),
-    agent2.id,
-    2,
-    signal,
-  )) {
-    yield ev;
-    if (ev.type === "agent_speak_done") {
-      allMessages.push({
-        id: genId(),
-        agentId: agent2.id,
-        content: ev.data.fullMessage,
-        round: 2,
-        timestamp: Date.now(),
-      });
-    }
-  }
-
-  // Designer speaks in Round 2
-  for await (const ev of streamSpeak(
-    openai,
-    designerSpeakPrompt(topic, rounds[1], allMessages, allAgents),
-    designerAgent.id,
-    2,
-    signal,
-  )) {
-    yield ev;
-    if (ev.type === "agent_speak_done") {
-      allMessages.push({
-        id: genId(),
-        agentId: designerAgent.id,
-        content: ev.data.fullMessage,
-        round: 2,
-        timestamp: Date.now(),
-      });
-    }
-  }
-
-  // ── Step 5: Retire + Spawn ──
-  const retireSpawn = await callJSON<{
-    retire: { agentId: string; exitMessage: string };
-    spawn: {
-      reason: string;
-      agent: {
-        name: string;
-        role: string;
-        personality: string;
-        color: string;
-        emoji: string;
-      };
-    };
+  // ── Step 4: Final Result ──
+  log("📊 최종 결과 생성 중...");
+  const finalResult = await callJSON<{
+    idea: FinalIdea;
   }>(
     openai,
-    retireSpawnPrompt(topic, pmAgent, agent2, allMessages, allAgents),
+    finalResultPrompt(topic, allAgents, allMessages, summary.summary),
     signal,
   );
 
-  yield {
-    type: "agent_retire",
-    data: {
-      agentId: agent2.id,
-      exitMessage: retireSpawn.retire.exitMessage,
-    },
-  };
-
-  yield { type: "spawn_trigger", data: { reason: retireSpawn.spawn.reason } };
-
-  const agent3: Agent = {
-    id: genId(),
-    name: retireSpawn.spawn.agent.name,
-    role: retireSpawn.spawn.agent.role,
-    personality: retireSpawn.spawn.agent.personality,
-    color: retireSpawn.spawn.agent.color,
-    emoji: retireSpawn.spawn.agent.emoji,
-    status: "online",
-  };
-
-  allAgents.push(agent3);
-  yield { type: "agent_spawned", data: { agent: agent3 } };
-
-  // ── Step 6: Round 3 ──
-  yield { type: "round_start", data: { round: 3, title: rounds[2].title } };
-
-  for await (const ev of streamSpeak(
-    openai,
-    pmSpeakPrompt(topic, rounds[2], allMessages, allAgents),
-    pmAgent.id,
-    3,
-    signal,
-  )) {
-    yield ev;
-    if (ev.type === "agent_speak_done") {
-      allMessages.push({
-        id: genId(),
-        agentId: pmAgent.id,
-        content: ev.data.fullMessage,
-        round: 3,
-        timestamp: Date.now(),
-      });
-    }
-  }
-
-  for await (const ev of streamSpeak(
-    openai,
-    agentSpeakPrompt(agent3, topic, rounds[2], allMessages, allAgents),
-    agent3.id,
-    3,
-    signal,
-  )) {
-    yield ev;
-    if (ev.type === "agent_speak_done") {
-      allMessages.push({
-        id: genId(),
-        agentId: agent3.id,
-        content: ev.data.fullMessage,
-        round: 3,
-        timestamp: Date.now(),
-      });
-    }
-  }
-
-  // Designer speaks in Round 3 (final visual direction)
-  for await (const ev of streamSpeak(
-    openai,
-    designerSpeakPrompt(topic, rounds[2], allMessages, allAgents),
-    designerAgent.id,
-    3,
-    signal,
-  )) {
-    yield ev;
-    if (ev.type === "agent_speak_done") {
-      allMessages.push({
-        id: genId(),
-        agentId: designerAgent.id,
-        content: ev.data.fullMessage,
-        round: 3,
-        timestamp: Date.now(),
-      });
-    }
-  }
-
-  // ── Step 7: Final Result ──
-  const finalResult = await callJSON<{
-    idea: FinalIdea;
-  }>(openai, finalResultPrompt(topic, allAgents, allMessages), signal);
-
+  log("📊 최종 아이디어", finalResult.idea);
   yield { type: "final_result", data: { result: { idea: finalResult.idea } } };
 
-  // ── Step 8: Landing Page ──
+  // ── Step 5: Landing Page ──
+  log("🌐 랜딩페이지 생성 중...");
   let landingHtml = "";
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), CALL_TIMEOUT);
+    const timeout = setTimeout(() => controller.abort(), LANDING_TIMEOUT);
     const merged = signal
       ? AbortSignal.any([signal, controller.signal])
       : controller.signal;
@@ -406,10 +398,14 @@ export async function* runDebate(
       {
         model: "gpt-4o",
         messages: [
-          { role: "user", content: landingPagePrompt(finalResult.idea) },
+          {
+            role: "user",
+            content: landingPagePrompt(finalResult.idea, summary.summary),
+          },
         ],
         stream: true,
         temperature: 0.7,
+        max_tokens: 16000,
       },
       { signal: merged },
     );
@@ -433,13 +429,26 @@ export async function* runDebate(
     .replace(/```\s*$/, "")
     .trim();
 
+  // GPT가 거부한 경우 fallback 사용
+  if (!landingHtml.includes("<!DOCTYPE") && !landingHtml.includes("<html")) {
+    log("⚠️ 랜딩페이지 생성 거부됨, fallback 사용");
+    landingHtml = FALLBACK_HTML(finalResult.idea);
+  }
+
+  log("🌐 랜딩페이지 HTML 완성", `${landingHtml.length}자`);
+  log("🌐 랜딩페이지 코드:\n", landingHtml);
   yield { type: "landing_page_ready", data: { html: landingHtml } };
 
-  // ── Step 9: Done ──
+  // ── Step 6: Done ──
+  log("✅ 토론 완료", {
+    totalTurns: turnCount,
+    totalAgents: allAgents.length,
+    totalMessages: allMessages.length,
+  });
   yield {
     type: "debate_end",
     data: {
-      totalRounds: 3,
+      totalRounds: turnCount,
       totalAgents: allAgents.length,
       totalMessages: allMessages.length,
     },

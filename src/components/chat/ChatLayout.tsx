@@ -18,7 +18,7 @@ export default function ChatLayout({ state }: ChatLayoutProps) {
       />
       <ChatArea
         channelName={state.channelName}
-        agents={state.agents}
+        agents={[...state.agents, ...state.retiredAgents]}
         chatItems={state.chatItems}
         currentRound={state.currentRound}
         activeAgentId={state.activeAgentId}
