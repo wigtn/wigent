@@ -35,7 +35,7 @@ export default function ChatMessage({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="group flex gap-3 px-5 py-1.5 hover:bg-[var(--bg-chat-hover)] transition-colors"
+      className="group flex gap-3 px-5 py-3 hover:bg-[var(--bg-chat-hover)] transition-colors"
     >
       {/* Avatar */}
       <div

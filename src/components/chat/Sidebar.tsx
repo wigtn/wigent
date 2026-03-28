@@ -20,7 +20,7 @@ export default function Sidebar({
   ];
 
   return (
-    <aside className="flex flex-col w-60 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] shrink-0 select-none">
+    <aside className="hidden md:flex flex-col w-60 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] shrink-0 select-none">
       {/* Workspace header */}
       <div className="flex items-center h-12 px-4 border-b border-[var(--border-subtle)]">
         <h1 className="text-[15px] font-bold text-[var(--text-bright)] truncate">

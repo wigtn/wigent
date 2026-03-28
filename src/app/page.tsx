@@ -16,7 +16,20 @@ export default function Home() {
   const { entries, save, remove } = useHistory();
   const [showChat, setShowChat] = useState(false);
   const [historyItem, setHistoryItem] = useState<HistoryEntry | null>(null);
+  const [loadingDone, setLoadingDone] = useState(false);
   const savedRef = useRef(false);
+
+  // Loading transition when debate completes
+  useEffect(() => {
+    if (state.status === "landing" && state.landingPageHtml && !historyItem) {
+      setLoadingDone(false);
+      const timer = setTimeout(() => setLoadingDone(true), 2200);
+      return () => clearTimeout(timer);
+    }
+    if (state.status === "idle") {
+      setLoadingDone(false);
+    }
+  }, [state.status, state.landingPageHtml, historyItem]);
 
   // Auto-save to history when debate completes
   useEffect(() => {
@@ -68,7 +81,7 @@ export default function Home() {
 
   // ── View state ──
 
-  type ViewState = "idle" | "chat" | "landing" | "chat-replay" | "error";
+  type ViewState = "idle" | "chat" | "loading" | "landing" | "chat-replay" | "error";
 
   let currentView: ViewState;
   if (showChat && (historyItem || state.status === "landing")) {
@@ -79,6 +92,8 @@ export default function Home() {
     currentView = "idle";
   } else if (state.status === "error") {
     currentView = "error";
+  } else if (state.status === "landing" && !loadingDone) {
+    currentView = "loading";
   } else if (state.status === "landing") {
     currentView = "landing";
   } else {
@@ -161,6 +176,38 @@ export default function Home() {
             className="h-full"
           >
             <ChatLayout state={state} />
+          </motion.div>
+        )}
+
+        {/* ── Loading Transition ── */}
+        {currentView === "loading" && (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.4 }}
+            className="flex flex-col items-center justify-center h-full px-4 gap-6"
+          >
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full border-[3px] border-[#383a3e] border-t-[#1264a3] animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                ⚔️
+              </div>
+            </div>
+            <div className="text-center">
+              <h2 className="text-xl font-bold gradient-text mb-2">
+                아이디어를 디자인하고 있어요
+              </h2>
+              <p className="text-sm text-[var(--text-muted)]">
+                토론 결과를 바탕으로 랜딩페이지를 생성 중입니다
+              </p>
+            </div>
+            <div className="flex gap-1.5 mt-2">
+              <span className="w-2 h-2 rounded-full bg-[#1264a3] animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 rounded-full bg-[#1264a3] animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 rounded-full bg-[#1264a3] animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
           </motion.div>
         )}
 
