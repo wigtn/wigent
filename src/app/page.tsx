@@ -175,6 +175,7 @@ export default function Home() {
           >
             <LandingPageView
               html={landingHtml}
+              title={historyItem?.result?.idea?.title ?? state.result?.idea?.title}
               onNewDebate={handleNewDebate}
               onViewChat={handleViewChat}
               onBack={historyItem ? handleHistoryBack : undefined}

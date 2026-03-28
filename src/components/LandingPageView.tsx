@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 
 interface LandingPageViewProps {
   html: string;
+  title?: string;
   onNewDebate: () => void;
   onViewChat?: () => void;
   onBack?: () => void;
@@ -11,11 +12,36 @@ interface LandingPageViewProps {
 
 export function LandingPageView({
   html,
+  title = "Landing Page",
   onNewDebate,
   onViewChat,
   onBack,
 }: LandingPageViewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+    try {
+      const res = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html, title }),
+      });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${title.replace(/\s+/g, "-").toLowerCase()}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("코드 추출에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setExporting(false);
+    }
+  }, [html, title]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -97,6 +123,29 @@ export function LandingPageView({
             토론 다시보기
           </button>
         )}
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="flex items-center gap-2 rounded-full bg-[#2ea043] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-[#3fb950] hover:scale-105 disabled:opacity-50 disabled:cursor-wait"
+          aria-label="코드 추출"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="shrink-0"
+          >
+            <path
+              d="M8 1v10M4 8l4 4 4-4M2 14h12"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          {exporting ? "추출 중..." : "Next.js 코드 추출"}
+        </button>
         <button
           onClick={onNewDebate}
           className="flex items-center gap-2 rounded-full bg-[#1264a3] px-5 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-[#1574b8] hover:scale-105"
