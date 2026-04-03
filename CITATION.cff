@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - name: "WIGTN Crew"
+    website: "https://wigtn.com"
+repository-code: "https://github.com/wigtn/wigent"
+url: "https://wigtn.com"
+abstract: "Agent Arena — A multi-agent debate platform where AI agents autonomously discuss and refine business ideas in a Slack-style chat UI, then generate a landing page from the result. Grand Prize winner at Build with TRAE Seoul Hackathon 2026."
+keywords:
+  - ai-native
+  - wigtn
+  - korea
+  - agent-arena
+  - multi-agent
+  - nextjs
+  - openai
+  - hackathon
+license: MIT

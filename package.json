@@ -2,6 +2,20 @@
   "name": "agent-arena",
   "version": "0.1.0",
   "private": true,
+  "author": "WIGTN Crew <hello@wigtn.com> (https://wigtn.com)",
+  "homepage": "https://wigtn.com",
+  "bugs": {
+    "url": "https://github.com/wigtn/wigent/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wigtn/wigent.git"
+  },
+  "keywords": ["wigtn", "ai-native", "agent-arena", "multi-agent", "nextjs"],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/wigtn"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
